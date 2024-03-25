@@ -7,7 +7,7 @@ import (
 func main() {
 	txt := TextNode{
 		Text:     "Lorem Ipsum",
-		TextType: "strong",
+		TextType: textTypeBold,
 		URL:      "https://www.inerthtml.com",
 	}
 
