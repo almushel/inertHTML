@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -49,7 +50,7 @@ func (node *TextNode) ToHTMLNode() (HtmlNode, error) {
 		result.Props["alt"] = node.Text
 		break
 	default:
-		err = errors.New("TextNode.ToHtmlNode: Invalid TextType")
+		err = errors.New("TextNode.ToHtmlNode(): Invalid TextType")
 	}
 
 	return result, err
@@ -111,4 +112,78 @@ func (nodeList TextNodeSlice) Split(delim string, splitType int) (TextNodeSlice,
 	}
 
 	return result, err
+}
+
+func (node *TextNode) SplitExp(pattern string, marshal func([]string) TextNode) ([]TextNode, error) {
+	var result []TextNode
+	expr, err := regexp.Compile(pattern)
+	if err != nil {
+		return result, err
+	}
+
+	textStrs := expr.Split(node.Text, -1)
+	exprStrs := expr.FindAllStringSubmatch(node.Text, -1)
+	var i, t int
+
+	// If line starts with an image pattern, append that first
+	if expr.FindStringIndex(node.Text)[0] == 0 {
+		exprNode := marshal(exprStrs[i])
+		result = append(result, exprNode)
+		i++
+	}
+
+	for t < len(textStrs) || i < len(exprStrs) {
+		if t < len(textStrs) {
+			if textStrs[t] != "" {
+				textNode := TextNode{
+					TextType: textTypeText,
+					Text:     textStrs[t],
+				}
+				result = append(result, textNode)
+			}
+			t++
+		}
+
+		if i < len(exprStrs) {
+			exprNode := marshal(exprStrs[i])
+			result = append(result, exprNode)
+			i++
+		}
+	}
+
+	return result, err
+}
+
+func (node *TextNode) SplitImageNodes() ([]TextNode, error) {
+	const pattern = "!\\[(.*?)\\]\\((.*?)\\)"
+	marshal := func(match []string) TextNode {
+		var result TextNode
+		if len(match) == 3 {
+			result = TextNode{
+				TextType: textTypeImage,
+				Text:     match[1],
+				URL:      match[2],
+			}
+		}
+		return result
+	}
+
+	return node.SplitExp(pattern, marshal)
+}
+
+func (node *TextNode) SplitLinkNodes() ([]TextNode, error) {
+	const pattern = "\\[(.*?)\\]\\((.*?)\\)"
+	marshal := func(match []string) TextNode {
+		var result TextNode
+		if len(match) == 3 {
+			result = TextNode{
+				TextType: textTypeLink,
+				Text:     match[1],
+				URL:      match[2],
+			}
+		}
+		return result
+	}
+
+	return node.SplitExp(pattern, marshal)
 }
