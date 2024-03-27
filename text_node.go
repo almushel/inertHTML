@@ -22,6 +22,7 @@ type TextNode struct {
 	Text, URL string
 }
 type TextNodeSlice []TextNode
+type TextNodeSplitFunc func(*TextNode) ([]TextNode, error)
 
 func (node *TextNode) ToHTMLNode() (HtmlNode, error) {
 	var result HtmlNode
@@ -67,13 +68,8 @@ func (node *TextNode) Split(delim string, splitType int) ([]TextNode, error) {
 	// If node text starts with delim,
 	// substrings with even indexes will be enclosed in the delim
 	var evenType, oddType int
-	if strings.HasPrefix(node.Text, delim) {
-		evenType = splitType
-		oddType = textTypeText
-	} else {
-		evenType = textTypeText
-		oddType = splitType
-	}
+	evenType = textTypeText
+	oddType = splitType
 
 	chunks := strings.Split(node.Text, delim)
 	if len(chunks)%2 != 0 {
@@ -101,32 +97,23 @@ func (node *TextNode) Split(delim string, splitType int) ([]TextNode, error) {
 	return result, err
 }
 
-func (nodeList TextNodeSlice) Split(delim string, splitType int) (TextNodeSlice, error) {
-	var result []TextNode
-	var err error
-
-	var nResult []TextNode
-	for _, n := range nodeList {
-		nResult, err = n.Split(delim, splitType)
-		result = append(result, nResult...)
+func (node *TextNode) SplitExp(pattern string, marshal func([]string) TextNode) ([]TextNode, error) {
+	if node.TextType != textTypeText {
+		return []TextNode{*node}, nil
 	}
 
-	return result, err
-}
-
-func (node *TextNode) SplitExp(pattern string, marshal func([]string) TextNode) ([]TextNode, error) {
-	var result []TextNode
 	expr, err := regexp.Compile(pattern)
 	if err != nil {
-		return result, err
+		return []TextNode{*node}, err
 	}
 
-	textStrs := expr.Split(node.Text, -1)
-	exprStrs := expr.FindAllStringSubmatch(node.Text, -1)
+	var result []TextNode
+	var textStrs []string = expr.Split(node.Text, -1)
+	var exprStrs [][]string = expr.FindAllStringSubmatch(node.Text, -1)
 	var i, t int
 
 	// If line starts with an image pattern, append that first
-	if expr.FindStringIndex(node.Text)[0] == 0 {
+	if exprStrs != nil && expr.FindStringIndex(node.Text)[0] == 0 {
 		exprNode := marshal(exprStrs[i])
 		result = append(result, exprNode)
 		i++
@@ -155,7 +142,7 @@ func (node *TextNode) SplitExp(pattern string, marshal func([]string) TextNode) 
 }
 
 func (node *TextNode) SplitImageNodes() ([]TextNode, error) {
-	const pattern = "!\\[(.*?)\\]\\((.*?)\\)"
+	const pattern = `!\[(.*?)\]\((.*?)\)`
 	marshal := func(match []string) TextNode {
 		var result TextNode
 		if len(match) == 3 {
@@ -172,7 +159,7 @@ func (node *TextNode) SplitImageNodes() ([]TextNode, error) {
 }
 
 func (node *TextNode) SplitLinkNodes() ([]TextNode, error) {
-	const pattern = "\\[(.*?)\\]\\((.*?)\\)"
+	const pattern = `[^!]\[(.*?)\]\((.*?)\)`
 	marshal := func(match []string) TextNode {
 		var result TextNode
 		if len(match) == 3 {
@@ -186,4 +173,78 @@ func (node *TextNode) SplitLinkNodes() ([]TextNode, error) {
 	}
 
 	return node.SplitExp(pattern, marshal)
+}
+
+func (nodeList TextNodeSlice) ForEach(f func(TextNode)) {
+	for _, node := range nodeList {
+		f(node)
+	}
+}
+
+func (nodeList TextNodeSlice) ToString() string {
+	var result string
+	nodeList.ForEach(func(n TextNode) {
+		result += fmt.Sprintf("%#v\n", n)
+	})
+	return result
+}
+
+func (nodeList TextNodeSlice) SplitFunc(split TextNodeSplitFunc) (TextNodeSlice, error) {
+	var result []TextNode
+	var err error
+
+	var nResult []TextNode
+	for _, n := range nodeList {
+		nResult, err = split(&n)
+		/*
+			if err != nil {
+				break
+			}
+		*/
+		result = append(result, nResult...)
+	}
+
+	return result, err
+}
+
+func (nodeList TextNodeSlice) Split(delim string, splitType int) ([]TextNode, error) {
+	return nodeList.SplitFunc(
+		func(n *TextNode) ([]TextNode, error) {
+			return n.Split(delim, splitType)
+		},
+	)
+}
+
+func (nodeList TextNodeSlice) SplitLinkNodes() ([]TextNode, error) {
+	return nodeList.SplitFunc(
+		func(n *TextNode) ([]TextNode, error) {
+			return n.SplitLinkNodes()
+		},
+	)
+}
+
+func (nodeList TextNodeSlice) SplitImageNodes() ([]TextNode, error) {
+	return nodeList.SplitFunc(
+		func(n *TextNode) ([]TextNode, error) {
+			return n.SplitImageNodes()
+		},
+	)
+}
+
+func (nodeList TextNodeSlice) SplitAll() ([]TextNode, error) {
+	delims := map[string]int{
+		"**": textTypeBold,
+		"*":  textTypeItalic,
+		"`":  textTypeCode,
+	}
+	var result TextNodeSlice
+	var err error
+
+	result, err = nodeList.SplitLinkNodes()
+	result, err = result.SplitImageNodes()
+	for delim, tType := range delims {
+		result, err = result.Split(delim, tType)
+	}
+
+	return result, err
 }

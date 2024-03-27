@@ -31,20 +31,40 @@ func TestImgSplit(t *testing.T) {
 		Text: `Before image1 ![img1 alt text](http://img1.url) after img1,
 		before img2 ![img2 alt text](http://img2.url)`,
 	}
-	result, _ := node.SplitImageNodes()
-	if len(result) != 4 && result[1].TextType != textTypeImage && result[2].TextType != textTypeImage {
-		t.Fatalf("Incorrect output for SplitImageNodes():\nInput:%s\nResult:%#v", node.Text, result)
+	var result TextNodeSlice
+	result, _ = node.SplitImageNodes()
+	if len(result) != 4 || result[1].TextType != textTypeImage || result[3].TextType != textTypeImage {
+		t.Fatalf("Incorrect output for SplitImageNodes():\nInput:\n%s\nResult:\n%s", node.Text, result.ToString())
 	}
 }
 
 func TestLinkSplit(t *testing.T) {
 	node := TextNode{
 		TextType: textTypeText,
-		Text: `Before link1 ![link1 anchor text](http://link1.url) after link1,
-		before link2 ![link2 anchor text](http://link2.url)`,
+		Text: `Before link1 [link1 anchor text](http://link1.url) after link1,
+		before link2 [link2 anchor text](http://link2.url)`,
 	}
-	result, _ := node.SplitLinkNodes()
-	if len(result) != 4 && result[1].TextType != textTypeLink && result[2].TextType != textTypeLink {
-		t.Fatalf("Incorrect output for SplitImageNodes():\nInput:%s\nResult:%#v", node.Text, result)
+	var result TextNodeSlice
+	result, _ = node.SplitLinkNodes()
+	if len(result) != 4 || result[1].TextType != textTypeLink || result[3].TextType != textTypeLink {
+		t.Fatalf("Incorrect output for SplitLinkNodes():\nInput:\n%s\nResult:\n%s", node.Text, result.ToString())
+	}
+}
+
+func TestSplitAll(t *testing.T) {
+	const nText string = "**bold text** *italic text* `code text` " +
+		"![image alt text](http://image.url) [link text](http://link.url)"
+
+	var nodes TextNodeSlice
+	nodes = append(nodes, TextNode{TextType: textTypeText, Text: nText})
+	nodes, _ = nodes.SplitAll()
+
+	if len(nodes) != 8 ||
+		nodes[0].TextType != textTypeBold ||
+		nodes[2].TextType != textTypeItalic ||
+		nodes[4].TextType != textTypeCode ||
+		nodes[6].TextType != textTypeImage ||
+		nodes[7].TextType != textTypeLink {
+		t.Fatalf("Incorrect output for SplitAll():\nInput:\n%s\n%s", nText, nodes.ToString())
 	}
 }
