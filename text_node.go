@@ -65,8 +65,6 @@ func (node *TextNode) Split(delim string, splitType int) ([]TextNode, error) {
 	var result []TextNode
 	var err error
 
-	// If node text starts with delim,
-	// substrings with even indexes will be enclosed in the delim
 	var evenType, oddType int
 	evenType = textTypeText
 	oddType = splitType
@@ -112,7 +110,7 @@ func (node *TextNode) SplitExp(pattern string, marshal func([]string) TextNode) 
 	var exprStrs [][]string = expr.FindAllStringSubmatch(node.Text, -1)
 	var i, t int
 
-	// If line starts with an image pattern, append that first
+	// If line starts with the pattern, append that first
 	if exprStrs != nil && expr.FindStringIndex(node.Text)[0] == 0 {
 		exprNode := marshal(exprStrs[i])
 		result = append(result, exprNode)

@@ -5,13 +5,13 @@ import (
 )
 
 func main() {
-	txt := TextNode{
+	txtNode := TextNode{
 		Text:     "Lorem Ipsum",
 		TextType: textTypeBold,
 		URL:      "https://www.inerthtml.com",
 	}
 
-	html := HtmlNode{
+	hNode := HtmlNode{
 		Tag:   "p",
 		Value: "Lorem Ipsum",
 		Props: map[string]string{
@@ -20,7 +20,7 @@ func main() {
 		},
 	}
 
-	fmt.Printf("%#v\n", txt)
-	fmt.Printf("%#v\n", html)
-	fmt.Println(html.ToHTML())
+	fmt.Printf("%#v\n", txtNode)
+	fmt.Printf("%#v\n", hNode)
+	fmt.Println(hNode.ToHTML())
 }
