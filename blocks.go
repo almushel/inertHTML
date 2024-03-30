@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -92,4 +93,79 @@ func GetBlockType(block string) int {
 	}
 
 	return blockTypeParagraph
+}
+
+func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
+	var result []HtmlNode
+	var err error
+	var newNode HtmlNode
+	for _, block := range blocks {
+		switch GetBlockType(block) {
+
+		case blockTypeHeading:
+			var i int = 0
+			for range block {
+				if block[i] != '#' {
+					break
+				}
+				i++
+			}
+
+			newNode = HtmlNode{
+				Tag:   "h" + fmt.Sprintf("%v", i),
+				Value: block[i+1:],
+			}
+			break
+
+		case blockTypeCode:
+			newNode = HtmlNode{
+				Tag:   "code",
+				Value: block[3+1 : len(block)-3],
+			}
+			break
+
+		case blockTypeQuote:
+			var quoteText string
+			for _, line := range strings.Split(block, "\n") {
+				quoteText += line[3:] + "\n"
+			}
+			newNode = HtmlNode{
+				Tag:   "blockquote",
+				Value: quoteText[:len(quoteText)-1],
+			}
+			break
+		case blockTypeOrderedList:
+			newNode = HtmlNode{
+				Tag: "ol",
+			}
+			for _, line := range strings.Split(block, "\n") {
+				newNode.Children = append(newNode.Children, HtmlNode{
+					Tag:   "li",
+					Value: line[3:],
+				})
+			}
+			break
+		case blockTypeUnorderedList:
+			newNode = HtmlNode{
+				Tag: "ul",
+			}
+			for _, line := range strings.Split(block, "\n") {
+				newNode.Children = append(newNode.Children, HtmlNode{
+					Tag:   "li",
+					Value: line[3:],
+				})
+			}
+			break
+		default:
+			newNode = HtmlNode{
+				Tag:   "p",
+				Value: block,
+			}
+			break
+		}
+
+		result = append(result, newNode)
+	}
+
+	return result, err
 }

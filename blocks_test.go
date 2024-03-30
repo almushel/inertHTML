@@ -4,6 +4,19 @@ import (
 	"testing"
 )
 
+var testBlocks map[string]string = map[string]string{
+	"Empty Paragraph":   "",
+	"Heading 3":         "### Heading 3",
+	"Broken Heading 3":  "###Heading",
+	"Heading 7":         "####### Heading",
+	"Code Block":        "```\nCode block line 1\nCode block line 2\n```",
+	"Broken Code Block": "```\nCode block line 1\nCode block line 2\n``",
+	"Blockquote":        ">>>quote line 1\n>>>quote line 2\n>>>quote line 3",
+	"Broken Blockquote": ">>>quote line 1\nquote line 2\n>>>quote line 3",
+	"Unordered List":    "* UL item 1\n- UL item 2\n* UL item 3",
+	"Ordered List":      "1. OL item 1\n2. OL item 2\n3. OL item 3",
+}
+
 func TestMarkdownBlocks(t *testing.T) {
 	blocks := []string{
 		"# This is a heading",
@@ -25,27 +38,53 @@ func TestGetBlockType(t *testing.T) {
 	type BlockTest struct {
 		Name   string
 		Result int
-		Block  string
 	}
 
-	blocks := []BlockTest{
-		{Name: "Empty Paragraph", Result: blockTypeParagraph, Block: ""},
-		{Name: "Heading 3", Result: blockTypeHeading, Block: "### Heading 3"},
-		{Name: "Broken heading 3", Result: blockTypeParagraph, Block: "###Heading"},
-		{Name: "Heading 7", Result: blockTypeParagraph, Block: "####### Heading"},
-		{Name: "Code block", Result: blockTypeCode, Block: "```\nCode block line 1\nCode block line 2\n```"},
-		{Name: "Broken code block", Result: blockTypeParagraph, Block: "```\nCode block line 1\nCode block line 2\n``"},
-		{Name: "Blockquote", Result: blockTypeQuote, Block: ">>>quote line 1\n>>>quote line 2\n>>>quote line 3"},
-		{Name: "Broken Blockquote", Result: blockTypeParagraph, Block: ">>>quote line 1\nquote line 2\n>>>quote line 3"},
-		{Name: "Unordered List", Result: blockTypeUnorderedList, Block: "* UL item 1\n- UL item 2\n* UL item 3"},
-		{Name: "Ordered list", Result: blockTypeOrderedList, Block: "1. OL item 1\n2. OL item 2\n3. OL item 3"},
+	blocks := map[string]int{
+		"Empty Paragraph":   blockTypeParagraph,
+		"Heading 3":         blockTypeHeading,
+		"Broken Heading 3":  blockTypeParagraph,
+		"Heading 7":         blockTypeParagraph,
+		"Code Block":        blockTypeCode,
+		"Broken Code Block": blockTypeParagraph,
+		"Blockquote":        blockTypeQuote,
+		"Broken Blockquote": blockTypeParagraph,
+		"Unordered List":    blockTypeUnorderedList,
+		"Ordered List":      blockTypeOrderedList,
 	}
 
-	for _, b := range blocks {
-		t.Run(b.Name, func(t *testing.T) {
-			result := GetBlockType(b.Block)
-			if result != b.Result {
-				t.Fatalf("GetBlockType() failed for input:\n%s\nExpected: %v Result: %v", b.Block, b.Result, result)
+	for key, b := range blocks {
+		t.Run(key, func(t *testing.T) {
+			result := GetBlockType(testBlocks[key])
+			if result != b {
+				t.Fatalf("Input:\n%s\nExpected: %v Result: %v", testBlocks[key], b, result)
+			}
+		})
+	}
+}
+
+func TestBlockstoHtmlNodes(t *testing.T) {
+	blocks := map[string]HtmlNode{
+		"Empty Paragraph":   {Tag: "p"},
+		"Heading 3":         {Tag: "h3", Value: "Heading 3"},
+		"Broken Heading 3":  {Tag: "p", Value: testBlocks["Broken Heading 3"]},
+		"Heading 7":         {Tag: "p", Value: testBlocks["Heading 7"]},
+		"Code Block":        {Tag: "code", Value: testBlocks["Code Block"][4 : len(testBlocks["Code Block"])-3]},
+		"Broken Code Block": {Tag: "p", Value: testBlocks["Broken Code Block"]},
+		"Blockquote":        {Tag: "blockquote", Value: "quote line 1\nquote line 2\nquote line 3"},
+		"Broken Blockquote": {Tag: "p", Value: testBlocks["Broken Blockquote"]},
+		"Unordered List":    {Tag: "ul"},
+		"Ordered List":      {Tag: "ol"},
+	}
+
+	for key, b := range blocks {
+		t.Run(key, func(t *testing.T) {
+			result, _ := BlocksToHTMLNodes([]string{testBlocks[key]})
+			if result[0].Tag != b.Tag {
+				t.Fatalf("Input:\n%s\nExpected Tag: %s\nResult: %s", testBlocks[key], b.Tag, result[0].Tag)
+			}
+			if b.Value != "" && result[0].Value != b.Value {
+				t.Fatalf("Input:\n%s\nExpected Value: %s\nResult: %s", testBlocks[key], b.Value, result[0].Value)
 			}
 		})
 	}
