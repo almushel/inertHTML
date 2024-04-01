@@ -8,7 +8,6 @@ import (
 )
 
 func RecursiveCopy(filesystem fs.FS, src, dest, dir string) error {
-	fmt.Printf("Copying %s to %s\n", src, dest)
 
 	if _, err := filesystem.Open(dest); errors.Is(err, fs.ErrNotExist) {
 		err := os.MkdirAll(dest, 0700)
@@ -16,7 +15,6 @@ func RecursiveCopy(filesystem fs.FS, src, dest, dir string) error {
 			return err
 		}
 	}
-
 	var walkDir string
 	if dir != "" {
 		walkDir = src + "/" + dir
@@ -29,17 +27,13 @@ func RecursiveCopy(filesystem fs.FS, src, dest, dir string) error {
 			if d == nil {
 				return err
 			}
-			println(path)
 			var destPath string = dest + path[len(src):]
+			fmt.Printf("%s -> %s\n", path, destPath)
 
 			if d.Name() == walkDir {
 				return nil
 			} else if d.IsDir() {
-				errResult := os.MkdirAll(destPath, 0700)
-				if errResult != nil {
-					return errResult
-				}
-				return RecursiveCopy(filesystem, src, dest, dir+"/"+d.Name())
+				return RecursiveCopy(filesystem, src, dest, path)
 			} else {
 				srcFile, errResult := filesystem.Open(path)
 				defer srcFile.Close()
@@ -72,8 +66,11 @@ func main() {
 		println(err.Error())
 		os.Exit(1)
 	}
+	src := "static"
+	dest := "public"
 
-	err = RecursiveCopy(os.DirFS(wd), "test", "public", "")
+	err = os.RemoveAll(dest)
+	err = RecursiveCopy(os.DirFS(wd), src, dest, "")
 	if err != nil {
 		println(err.Error())
 	}
