@@ -106,6 +106,33 @@ func RecursiveFileCopy(filesystem fs.FS, src, dest, dir string) error {
 	return err
 }
 
+func ProcessInnerText(nodes []HtmlNode) {
+	for i := range nodes {
+		if nodes[i].Value != "" {
+			var innerTextNodes TextNodeSlice
+			innerTextNodes = append(innerTextNodes, TextNode{
+				TextType: textTypeText,
+				Text:     nodes[i].Value,
+			})
+
+			innerTextNodes, _ = innerTextNodes.SplitAll()
+			if len(innerTextNodes) > 1 || innerTextNodes[0].TextType != textTypeText {
+				for _, itNode := range innerTextNodes {
+					child, _ := itNode.ToHTMLNode()
+					nodes[i].Children = append(nodes[i].Children, child)
+				}
+
+				nodes[i].Value = ""
+			}
+		}
+
+		if len(nodes[i].Children) > 0 {
+			ProcessInnerText(nodes[i].Children)
+		}
+
+	}
+}
+
 func GeneratePage(src, template, dest string) error {
 	var srcFile, templateFile, destFile *os.File
 	var err error
@@ -142,35 +169,16 @@ func GeneratePage(src, template, dest string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%#v", len(blockNodes))
 
 	var pageTitle string
-	for i := range blockNodes {
-		if pageTitle == "" && blockNodes[i].Tag[0] == 'h' {
-			pageTitle = blockNodes[i].Value
-		}
 
-		var innerTextNodes TextNodeSlice
-		innerTextNodes = append(innerTextNodes, TextNode{
-			TextType: textTypeText,
-			Text:     blockNodes[i].Value,
-		})
-
-		innerTextNodes, _ = innerTextNodes.SplitAll()
-		if innerTextNodes != nil && (len(innerTextNodes) > 1 || innerTextNodes[0].TextType != textTypeText) {
-			var children []HtmlNode
-			for _, itNode := range innerTextNodes {
-				child, _ := itNode.ToHTMLNode()
-				children = append(children, child)
-			}
-
-			blockNodes[i].Value = ""
-			blockNodes[i].Children = children
-		}
-	}
+	ProcessInnerText(blockNodes)
 
 	var body string
 	for _, node := range blockNodes {
+		if pageTitle == "" && node.Tag == "h1" {
+			pageTitle = node.Value
+		}
 		body += node.ToHTML()
 	}
 
