@@ -157,14 +157,26 @@ func (node *TextNode) SplitImageNodes() ([]TextNode, error) {
 }
 
 func (node *TextNode) SplitLinkNodes() ([]TextNode, error) {
-	const pattern = `[^!]\[(.*?)\]\((.*?)\)`
+	const imgExclude = `[^!]`
+	const link = `\[(.*?)\]\((.*?)\)`
+
+	pattern := fmt.Sprintf(`(?:%s%s)|(?:^%s)`, imgExclude, link, link)
+
 	marshal := func(match []string) TextNode {
 		var result TextNode
-		if len(match) == 3 {
-			result = TextNode{
-				TextType: textTypeLink,
-				Text:     match[1],
-				URL:      match[2],
+		if len(match) == 5 {
+			if match[1] != "" {
+				result = TextNode{
+					TextType: textTypeLink,
+					Text:     match[1],
+					URL:      match[2],
+				}
+			} else {
+				result = TextNode{
+					TextType: textTypeLink,
+					Text:     match[3],
+					URL:      match[4],
+				}
 			}
 		}
 		return result
