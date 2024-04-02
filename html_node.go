@@ -51,6 +51,7 @@ func NewLeafNode(tag, value string) HtmlNode {
 	result := HtmlNode{
 		Tag:   tag,
 		Value: value,
+		Props: make(map[string]string),
 	}
 
 	return result
@@ -60,6 +61,7 @@ func NewParentNode(tag string, children []HtmlNode) HtmlNode {
 	result := HtmlNode{
 		Tag:      tag,
 		Children: children,
+		Props:    make(map[string]string),
 	}
 
 	return result

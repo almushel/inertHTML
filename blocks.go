@@ -21,7 +21,15 @@ func IsNumeric(r rune) bool {
 func ParseMDBlocks(md string) []string {
 	var result []string
 
-	blocks := strings.Split(md, "\n\n")
+	var sep string
+	// Attempting to account for Windows newline format
+	if strings.Count(md, "\n\n") > strings.Count(md, "\r\n\r\n") {
+		sep = "\n\n"
+	} else {
+		sep = "\r\n\r\n"
+	}
+
+	blocks := strings.Split(md, sep)
 	for _, b := range blocks {
 		result = append(result, strings.TrimSpace(b))
 	}
