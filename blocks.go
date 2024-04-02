@@ -147,9 +147,16 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 				Tag: "ol",
 			}
 			for _, line := range strings.Split(block, "\n") {
+				var i int
+				var c rune
+				for i, c = range line {
+					if !IsNumeric(c) {
+						break
+					}
+				}
 				newNode.Children = append(newNode.Children, HtmlNode{
 					Tag:   "li",
-					Value: line[2:],
+					Value: line[i+2:],
 				})
 			}
 			break
