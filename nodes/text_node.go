@@ -1,4 +1,4 @@
-package main
+package nodes
 
 import (
 	"errors"
@@ -30,25 +30,31 @@ func (node *TextNode) ToHTMLNode() (HtmlNode, error) {
 
 	switch node.TextType {
 	case textTypeText:
-		result = NewLeafNode("", node.Text)
+		result = NewHtmlNode("", node.Text, nil, nil)
 		break
 	case textTypeBold:
-		result = NewLeafNode("strong", node.Text)
+		result = NewHtmlNode("strong", node.Text, nil, nil)
 		break
 	case textTypeItalic:
-		result = NewLeafNode("em", node.Text)
+		result = NewHtmlNode("em", node.Text, nil, nil)
 		break
 	case textTypeCode:
-		result = NewLeafNode("code", node.Text)
+		result = NewHtmlNode("code", node.Text, nil, nil)
 		break
 	case textTypeLink:
-		result = NewLeafNode("a", node.Text)
-		result.Props["href"] = node.URL
+		result = NewHtmlNode("a", node.Text, nil,
+			map[string]string{
+				"href": node.URL,
+			},
+		)
 		break
 	case textTypeImage:
-		result = NewLeafNode("img", "")
-		result.Props["src"] = node.URL
-		result.Props["alt"] = node.Text
+		result = NewHtmlNode("img", "", nil,
+			map[string]string{
+				"src": node.URL,
+				"alt": node.Text,
+			},
+		)
 		break
 	default:
 		err = errors.New("TextNode.ToHtmlNode(): Invalid TextType")
@@ -157,26 +163,16 @@ func (node *TextNode) SplitImageNodes() ([]TextNode, error) {
 }
 
 func (node *TextNode) SplitLinkNodes() ([]TextNode, error) {
-	const imgExclude = `[^!]`
 	const link = `\[(.*?)\]\((.*?)\)`
-
-	pattern := fmt.Sprintf(`(?:%s%s)|(?:^%s)`, imgExclude, link, link)
+	pattern := fmt.Sprintf(`(?:[^!]%s)|(?:^%s)`, link, link)
 
 	marshal := func(match []string) TextNode {
 		var result TextNode
 		if len(match) == 5 {
-			if match[1] != "" {
-				result = TextNode{
-					TextType: textTypeLink,
-					Text:     match[1],
-					URL:      match[2],
-				}
-			} else {
-				result = TextNode{
-					TextType: textTypeLink,
-					Text:     match[3],
-					URL:      match[4],
-				}
+			result = TextNode{
+				TextType: textTypeLink,
+				Text:     match[1] + match[3],
+				URL:      match[2] + match[4],
 			}
 		}
 		return result
