@@ -7,12 +7,12 @@ import (
 func main() {
 	var err error
 
-	src := "static/index.md"
+	src := "static"
 	template := "template.html"
-	dest := "public/index.html"
+	dest := "public"
 
 	err = os.RemoveAll(dest)
-	err = GeneratePage(src, template, dest)
+	err = GeneratePageRecursive(src, template, dest)
 	if err != nil {
 		println(err.Error())
 	}

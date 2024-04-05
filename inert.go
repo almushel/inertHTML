@@ -69,3 +69,21 @@ func GeneratePage(src, template, dest string) error {
 
 	return os.WriteFile(dest, []byte(result), 0666)
 }
+
+func GeneratePageRecursive(src, template, dest string) error {
+	proc := func(path string) error {
+		destPath := dest + path[len(src):]
+		if strings.HasSuffix(path, ".md") {
+			return GeneratePage(path, template, destPath[:len(destPath)-len(".md")]+".html")
+		} else {
+			return FileCopy(path, destPath)
+		}
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	return WalkDirRecursive(wd, src, proc)
+}

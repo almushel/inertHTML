@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -48,16 +46,16 @@ func ReadAllS(src *os.File) (string, error) {
 	return string(bytes), nil
 }
 
-func FileCopy(filesystem fs.FS, src, dest string) error {
+func FileCopy(src, dest string) error {
 	var err error
 
-	srcFile, err := filesystem.Open(src)
+	srcFile, err := os.Open(src)
 	defer srcFile.Close()
 	if err != nil {
 		return err
 	}
 
-	destFile, err := os.Create(dest)
+	destFile, err := CreateAll(dest)
 	defer destFile.Close()
 	if err != nil {
 		return err
@@ -71,37 +69,39 @@ func FileCopy(filesystem fs.FS, src, dest string) error {
 	return err
 }
 
-func FileCopyRecursive(filesystem fs.FS, src, dest, dir string) error {
-	if _, err := filesystem.Open(dest); errors.Is(err, fs.ErrNotExist) {
-		err := os.MkdirAll(dest, 0700)
-		if err != nil {
-			return err
-		}
-	}
-	var walkDir string
-	if dir != "" {
-		walkDir = src + "/" + dir
-	} else {
-		walkDir = src
-	}
+type WalkDirProc func(path string) error
 
-	err := fs.WalkDir(filesystem, walkDir,
+func WalkDirRecursive(root, dir string, proc WalkDirProc) error {
+	err := fs.WalkDir(os.DirFS(root), dir,
 		func(path string, d fs.DirEntry, err error) error {
 			if d == nil {
 				return err
 			}
-			var destPath string = dest + path[len(src):]
-			fmt.Printf("%s -> %s\n", path, destPath)
 
-			if d.Name() == walkDir {
-				return nil
+			if path == dir {
+				return err
 			} else if d.IsDir() {
-				return FileCopyRecursive(filesystem, src, dest, path)
+				return WalkDirRecursive(root, path, proc)
 			} else {
-				return FileCopy(filesystem, path, destPath)
+				return proc(path)
 			}
 		},
 	)
 
 	return err
+}
+
+func FileCopyRecursive(src, dest string) error {
+	proc := func(path string) error {
+		var destPath string = dest + path[len(src):]
+
+		return FileCopy(path, destPath)
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	return WalkDirRecursive(wd, src, proc)
 }
