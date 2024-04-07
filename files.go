@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"io/fs"
 	"os"
 	"strings"
@@ -20,30 +19,13 @@ func CreateAll(name string) (*os.File, error) {
 	return os.Create(name)
 }
 
-func ReadAll(src *os.File) ([]byte, error) {
-	var result []byte
-	var err error
-
-	var buf []byte = make([]byte, 2048)
-	var bytesRead int
-	for bytesRead, err = src.Read(buf); bytesRead != 0; bytesRead, err = src.Read(buf) {
-		result = append(result, buf[:bytesRead]...)
-	}
-
-	if err == io.EOF {
-		err = nil
-	}
-
-	return result, err
-}
-
-func ReadAllS(src *os.File) (string, error) {
-	bytes, err := ReadAll(src)
+func ReadFileS(name string) (string, error) {
+	buf, err := os.ReadFile(name)
 	if err != nil {
 		return "", err
 	}
 
-	return string(bytes), nil
+	return string(buf), nil
 }
 
 func FileCopy(src, dest string) error {

@@ -1,47 +1,38 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
 	"github.com/almushel/inertHTML/nodes"
 )
 
-func GeneratePage(src, template, dest string) error {
-	var srcFile, templateFile, destFile *os.File
-	var err error
+const defaultTemplate = `<!DOCTYPE html>
+<html>
 
-	srcFile, err = os.Open(src)
-	defer srcFile.Close()
-	if err != nil {
-		return err
-	}
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title> {{ Title }} </title>
+    <link href="/index.css" rel="stylesheet">
+</head>
 
-	templateFile, err = os.Open(template)
-	if err != nil {
-		return err
-	}
+<body>
+    <article>
+        {{ Content }}
+    </article>
+</body>
 
-	destFile, err = CreateAll(dest)
-	defer destFile.Close()
-	if err != nil {
-		return err
-	}
+</html>`
 
-	templateStr, err := ReadAllS(templateFile)
-	if err != nil {
-		return err
-	}
+func MDtoHTML(src, template string) (string, error) {
+	var result string
 
-	srcTxt, err := ReadAllS(srcFile)
-	if err != nil {
-		return err
-	}
-
-	blocks := nodes.ParseMDBlocks(srcTxt)
+	blocks := nodes.ParseMDBlocks(src)
 	blockNodes, err := nodes.BlocksToHTMLNodes(blocks)
 	if err != nil {
-		return err
+		return result, err
 	}
 
 	var pageTitle string
@@ -58,8 +49,8 @@ func GeneratePage(src, template, dest string) error {
 		body += node.ToHTML()
 	}
 
-	result := strings.Join(
-		strings.Split(templateStr, "{{ Title }}"),
+	result = strings.Join(
+		strings.Split(template, "{{ Title }}"),
 		pageTitle,
 	)
 	result = strings.Join(
@@ -67,17 +58,55 @@ func GeneratePage(src, template, dest string) error {
 		body,
 	)
 
+	return result, nil
+}
+
+func GeneratePage(src, template, dest string) error {
+	var err error
+	var templateStr string
+
+	if template == "" {
+		templateStr = defaultTemplate
+	} else {
+		templateStr, err = ReadFileS(template)
+		if err != nil {
+			return err
+		}
+	}
+
+	srcTxt, err := ReadFileS(src)
+	if err != nil {
+		return err
+	}
+
+	destFile, err := CreateAll(dest)
+	defer destFile.Close()
+	if err != nil {
+		return err
+	}
+
+	result, err := MDtoHTML(srcTxt, templateStr)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("MD -> HTML: %s -> %s\n", src, dest)
 	return os.WriteFile(dest, []byte(result), 0666)
 }
 
 func GeneratePageRecursive(src, template, dest string) error {
+	if s, _ := os.Stat(src); !s.IsDir() {
+		return GeneratePage(src, template, dest)
+	}
+
 	proc := func(path string) error {
 		destPath := dest + path[len(src):]
 		if strings.HasSuffix(path, ".md") {
-			return GeneratePage(path, template, destPath[:len(destPath)-len(".md")]+".html")
-		} else {
-			return FileCopy(path, destPath)
+			destFilePath := destPath[:len(destPath)-len("md")] + "html"
+			return GeneratePage(path, template, destFilePath)
 		}
+
+		return nil
 	}
 
 	wd, err := os.Getwd()
