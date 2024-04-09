@@ -18,15 +18,23 @@ func ErrPrintln(format string) (int, error) {
 
 func main() {
 	var err error
-
+	var flags InertFlags
 	var src, template, dest string
-	flag.StringVar(&dest, "o", "", "output file/directory")
+
+	//flag.BoolVar(&flags.ForceCopy, "-f", false, "do not prompt before overwriting")
+	flag.BoolVar(&flags.NoClobber, "n", false, "do not overwrite an existing file")
+	flag.BoolVar(&flags.Interactive, "i", false, "prompt before overwrite")
+	flag.StringVar(&dest, "o", "", "write output to file/directory")
 	//flag.StringVar(&template, "t", "", "html template for parsed markdown")
 	flag.Parse()
 
-	// NOTE: Maybe default to working directory if no src specified?
+	if flags.NoClobber {
+		flags.Interactive = false
+	}
+
 	if flag.NArg() < 1 {
 		ErrPrintf("Source file/directory required\n")
+		flag.Usage()
 		os.Exit(1)
 	}
 	src = flag.Arg(0)
@@ -58,14 +66,7 @@ func main() {
 		}
 	}
 
-	/*
-		err = os.RemoveAll(dest)
-		if err != nil {
-			ErrPrintln(err.Error())
-		}
-	*/
-
-	err = GeneratePage(src, template, dest)
+	err = GeneratePageRecursiveEx(src, template, dest, flags)
 
 	if err != nil {
 		ErrPrintln(err.Error())

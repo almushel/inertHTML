@@ -26,6 +26,10 @@ const defaultTemplate = `<!DOCTYPE html>
 
 </html>`
 
+type InertFlags struct {
+	NoClobber, Interactive bool
+}
+
 func MDtoHTML(src, template string) (string, error) {
 	var result string
 
@@ -94,6 +98,24 @@ func GeneratePage(src, template, dest string) error {
 	return os.WriteFile(dest, []byte(result), 0666)
 }
 
+func GeneratePageEx(src, template, dest string, flags InertFlags) error {
+	_, err := os.Stat(dest)
+	if err == nil {
+		if flags.NoClobber {
+			return nil
+		} else if flags.Interactive {
+			fmt.Printf("inertHTML: overwrite '%s'? ", dest)
+			var input string
+			_, err = fmt.Scanln(&input)
+			if input != "y" && input != "yes" {
+				return err
+			}
+		}
+	}
+
+	return GeneratePage(src, template, dest)
+}
+
 func GeneratePageRecursive(src, template, dest string) error {
 	if s, _ := os.Stat(src); !s.IsDir() {
 		return GeneratePage(src, template, dest)
@@ -104,6 +126,29 @@ func GeneratePageRecursive(src, template, dest string) error {
 		if strings.HasSuffix(path, ".md") {
 			destFilePath := destPath[:len(destPath)-len("md")] + "html"
 			return GeneratePage(path, template, destFilePath)
+		}
+
+		return nil
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	return WalkDirRecursive(wd, src, proc)
+}
+
+func GeneratePageRecursiveEx(src, template, dest string, flags InertFlags) error {
+	if s, _ := os.Stat(src); !s.IsDir() {
+		return GeneratePageEx(src, template, dest, flags)
+	}
+
+	proc := func(path string) error {
+		destPath := dest + path[len(src):]
+		if strings.HasSuffix(path, ".md") {
+			destFilePath := destPath[:len(destPath)-len("md")] + "html"
+			return GeneratePageEx(path, template, destFilePath, flags)
 		}
 
 		return nil
