@@ -3,7 +3,7 @@ A static site generator for converting markdown files to simple HTML.
 
 ## Usage
 
-At a minumum, a positional source argument is required.
+At a minimum, a positional source argument is required.
 This can be either a single markdown file or a directory containing markdown files.
 By default, the output will be written to files in the same directory.
 
@@ -11,7 +11,7 @@ By default, the output will be written to files in the same directory.
 # Parses file.md and outputs file.html in the same directory
 inertHTML file.md
 
-# Parses all .md files in directory and outputs *.html files
+# Parses all *.md files in directory and outputs *.html files
 inertHTML directory
 ```
 

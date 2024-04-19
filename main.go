@@ -40,11 +40,12 @@ func main() {
 	src = flag.Arg(0)
 
 	srcInfo, err := os.Stat(src)
-	if !srcInfo.IsDir() && !strings.HasSuffix(src, ".md") {
+	if err != nil {
+		ErrPrintln(err.Error())
+		os.Exit(1)
+	} else if !srcInfo.IsDir() && !strings.HasSuffix(src, ".md") {
 		ErrPrintln("Invalid source. Directory or *.md file expected")
 		os.Exit(1)
-	} else if err != nil {
-		ErrPrintf(err.Error())
 	}
 
 	if dest == "" {
