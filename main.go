@@ -8,6 +8,10 @@ import (
 	"strings"
 )
 
+type InertFlags struct {
+	NoClobber, Interactive, Recursive bool
+}
+
 func ErrPrintf(format string, a ...any) (int, error) {
 	return fmt.Fprintf(os.Stderr, "inertHTML: "+format, a...)
 }
@@ -24,6 +28,7 @@ func main() {
 	//flag.BoolVar(&flags.ForceCopy, "-f", false, "do not prompt before overwriting")
 	flag.BoolVar(&flags.NoClobber, "n", false, "do not overwrite an existing file")
 	flag.BoolVar(&flags.Interactive, "i", false, "prompt before overwrite")
+	flag.BoolVar(&flags.Recursive, "r", false, "process directories and their contents recursively")
 	flag.StringVar(&dest, "o", "", "write output to file/directory")
 	//flag.StringVar(&template, "t", "", "html template for parsed markdown")
 	flag.Parse()
@@ -67,7 +72,11 @@ func main() {
 		}
 	}
 
-	err = GeneratePageRecursiveEx(src, template, dest, flags)
+	if srcInfo.IsDir() {
+		err = GenerateDirectory(src, template, dest, flags)
+	} else {
+		err = GeneratePageEx(src, template, dest, flags)
+	}
 
 	if err != nil {
 		ErrPrintln(err.Error())

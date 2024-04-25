@@ -5,7 +5,7 @@ A static site generator for converting markdown files to simple HTML.
 
 At a minimum, a positional source argument is required.
 This can be either a single markdown file or a directory containing markdown files.
-By default, the output will be written to files in the same directory.
+By default, the output will be written to quivalent html files in the same directory.
 
 ```sh
 # Parses file.md and outputs file.html in the same directory
@@ -40,6 +40,7 @@ inertHTML -o file.html srcDir
 By default, inertHTML will quietly replace the contents of existing destination files.
 This behavior can be changed with the following boolean flags:
 
+* `-r`: Recursively process directories and their contents. Ignored if source is a single file.
 * `-n`: No clobber. Quietly skips any existing files. 
 * `-i`: Interactive mode. Asks for confirmation to overwrite each existing file.
 

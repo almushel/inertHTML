@@ -21,11 +21,7 @@ func CreateAll(name string) (*os.File, error) {
 
 func ReadFileS(name string) (string, error) {
 	buf, err := os.ReadFile(name)
-	if err != nil {
-		return "", err
-	}
-
-	return string(buf), nil
+	return string(buf), err
 }
 
 func FileCopy(src, dest string) error {
@@ -51,39 +47,23 @@ func FileCopy(src, dest string) error {
 	return err
 }
 
-type WalkDirProc func(path string) error
-
-func WalkDirRecursive(root, dir string, proc WalkDirProc) error {
-	err := fs.WalkDir(os.DirFS(root), dir,
-		func(path string, d fs.DirEntry, err error) error {
-			if d == nil {
-				return err
-			}
-
-			if path == dir {
-				return err
-			} else if d.IsDir() {
-				return WalkDirRecursive(root, path, proc)
-			} else {
-				return proc(path)
-			}
-		},
-	)
-
-	return err
-}
-
 func FileCopyRecursive(src, dest string) error {
-	proc := func(path string) error {
-		var destPath string = dest + path[len(src):]
-
-		return FileCopy(path, destPath)
-	}
-
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
 
-	return WalkDirRecursive(wd, src, proc)
+	err = fs.WalkDir(os.DirFS(wd), src,
+		func(path string, d fs.DirEntry, err error) error {
+			if d == nil || d.IsDir() {
+				return err
+			}
+
+			var destPath string = dest + path[len(src):]
+
+			return FileCopy(path, destPath)
+		},
+	)
+
+	return err
 }

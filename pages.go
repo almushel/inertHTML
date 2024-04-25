@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -26,10 +27,7 @@ const defaultTemplate = `<!DOCTYPE html>
 
 </html>`
 
-type InertFlags struct {
-	NoClobber, Interactive bool
-}
-
+// Process markdown in src and output to dest using html template
 func GeneratePage(src, template, dest string) error {
 	var err error
 	var templateStr string
@@ -63,12 +61,14 @@ func GeneratePage(src, template, dest string) error {
 	return os.WriteFile(dest, []byte(result), 0666)
 }
 
+// GeneratePage with inert flag behaviors
 func GeneratePageEx(src, template, dest string, flags InertFlags) error {
-	_, err := os.Stat(dest)
-	if err == nil {
+	if _, err := os.Stat(dest); !errors.Is(err, os.ErrNotExist) {
 		if flags.NoClobber {
 			return nil
-		} else if flags.Interactive {
+		}
+
+		if flags.Interactive {
 			fmt.Printf("inertHTML: overwrite '%s'? ", dest)
 			var input string
 			_, err = fmt.Scanln(&input)
@@ -81,48 +81,26 @@ func GeneratePageEx(src, template, dest string, flags InertFlags) error {
 	return GeneratePage(src, template, dest)
 }
 
-func GeneratePageRecursive(src, template, dest string) error {
-	if s, _ := os.Stat(src); !s.IsDir() {
-		return GeneratePage(src, template, dest)
-	}
-
-	proc := func(path string) error {
-		destPath := dest + path[len(src):]
-		if strings.HasSuffix(path, ".md") {
-			destFilePath := destPath[:len(destPath)-len("md")] + "html"
-			return GeneratePage(path, template, destFilePath)
-		}
-
-		return nil
-	}
-
-	wd, err := os.Getwd()
+// Process all md files at dest
+// If recursive flag is set, continue recursively into subdirectories
+func GenerateDirectory(src, template, dest string, flags InertFlags) error {
+	files, err := os.ReadDir(src)
 	if err != nil {
 		return err
 	}
 
-	return WalkDirRecursive(wd, src, proc)
-}
+	var srcPath, destPath string
+	for _, file := range files {
+		srcPath = src + "/" + file.Name()
+		destPath = dest + "/" + file.Name()
 
-func GeneratePageRecursiveEx(src, template, dest string, flags InertFlags) error {
-	if s, _ := os.Stat(src); !s.IsDir() {
-		return GeneratePageEx(src, template, dest, flags)
-	}
-
-	proc := func(path string) error {
-		destPath := dest + path[len(src):]
-		if strings.HasSuffix(path, ".md") {
+		if flags.Recursive && file.IsDir() {
+			err = GenerateDirectory(srcPath, template, dest, flags)
+		} else if strings.HasSuffix(srcPath, ".md") {
 			destFilePath := destPath[:len(destPath)-len("md")] + "html"
-			return GeneratePageEx(path, template, destFilePath, flags)
+			err = GeneratePageEx(srcPath, template, destFilePath, flags)
 		}
-
-		return nil
 	}
 
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	return WalkDirRecursive(wd, src, proc)
+	return err
 }
