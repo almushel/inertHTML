@@ -11,15 +11,27 @@ By default, the output will be written to quivalent html files in the same direc
 # Parses file.md and outputs file.html in the same directory
 inertHTML file.md
 
-# Parses all *.md files in directory and outputs *.html files
+# Parses *.md files in directory and outputs *.html files in place
 inertHTML directory
 ```
+
+### Recursive
+
+By default only the files at the top level of the source directory will be processed.
+To recursively process all subdirectories, enable the `-r` flag.
+This will be ignored if the source is a file.
+
+```sh
+# Parses *.md files in directory and all subdirectories and outputs *.html files in place
+inertHTML -r directory
+```
+
 
 ### Output
 
 If the `-o` flag is defined, the results will be output there.
 Like the source, this can be a file or a directory.
-However, seting `-o` to a directory for a file source will return an error.
+However, setting `-o` to a directory for a file source will return an error.
 
 ```sh
 # Writes to file.html
@@ -40,7 +52,6 @@ inertHTML -o file.html srcDir
 By default, inertHTML will quietly replace the contents of existing destination files.
 This behavior can be changed with the following boolean flags:
 
-* `-r`: Recursively process directories and their contents. Ignored if source is a single file.
 * `-n`: No clobber. Quietly skips any existing files. 
 * `-i`: Interactive mode. Asks for confirmation to overwrite each existing file.
 
