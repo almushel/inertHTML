@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/almushel/inertHTML/nodes"
+	"github.com/almushel/inertHTML/parser"
 )
 
 const defaultTemplate = `<!DOCTYPE html>
@@ -28,41 +28,6 @@ const defaultTemplate = `<!DOCTYPE html>
 
 type InertFlags struct {
 	NoClobber, Interactive bool
-}
-
-func MDtoHTML(src, template string) (string, error) {
-	var result string
-
-	blocks := nodes.ParseMDBlocks(src)
-	blockNodes, err := nodes.BlocksToHTMLNodes(blocks)
-	if err != nil {
-		return result, err
-	}
-
-	var pageTitle string
-
-	for i := range blockNodes {
-		blockNodes[i].ProcessInnerText()
-	}
-
-	var body string
-	for _, node := range blockNodes {
-		if pageTitle == "" && node.Tag == "h1" {
-			pageTitle = node.Value
-		}
-		body += node.ToHTML()
-	}
-
-	result = strings.Join(
-		strings.Split(template, "{{ Title }}"),
-		pageTitle,
-	)
-	result = strings.Join(
-		strings.Split(result, "{{ Content }}"),
-		body,
-	)
-
-	return result, nil
 }
 
 func GeneratePage(src, template, dest string) error {
@@ -89,7 +54,7 @@ func GeneratePage(src, template, dest string) error {
 		return err
 	}
 
-	result, err := MDtoHTML(srcTxt, templateStr)
+	result, err := parser.MDtoHTML(srcTxt, templateStr)
 	if err != nil {
 		return err
 	}
