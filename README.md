@@ -15,7 +15,7 @@ inertHTML file.md
 inertHTML directory
 ```
 
-### Recursive
+### Recursion
 
 By default only the files at the top level of the source directory will be processed.
 To recursively process all subdirectories, enable the `-r` flag.
@@ -45,6 +45,16 @@ inertHTML -o destDir srcDir
 
 # Invalid combination. Returns an error.
 inertHTML -o file.html srcDir
+```
+
+### Templates
+
+A custom template file can be specified with the `-t` flag.
+This file must be a valid html file with `<html>` and `<body>` tags
+as well as `{{ Title }}` and `{{ Content }}` template tags.
+
+```sh
+inertHTML -t template.html file.md
 ```
 
 ### Overwriting files

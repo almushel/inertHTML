@@ -27,6 +27,36 @@ const defaultTemplate = `<!DOCTYPE html>
 
 </html>`
 
+func ValidateTemplateFile(file string) error {
+	info, err := os.Stat(file)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to open template file: %s", err.Error()))
+	}
+
+	if info.IsDir() {
+		return errors.New("Template file is a directory")
+	}
+
+	template, err := ReadFileS(file)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to read template file: %s", err.Error()))
+	}
+
+	substrs := []string{
+		"<html>", "</html>",
+		"<body>", "</body>",
+		"{{ Title }}", "{{ Content }}",
+	}
+
+	for _, s := range substrs {
+		if !strings.Contains(template, s) {
+			return errors.New(fmt.Sprintf("Invalid template: %s tag not found.", s))
+		}
+	}
+
+	return nil
+}
+
 // Process markdown in src and output to dest using html template
 func GeneratePage(src, template, dest string) error {
 	var err error
@@ -93,6 +123,10 @@ func GenerateDirectory(src, template, dest string, flags InertFlags) error {
 	for _, file := range files {
 		srcPath = src + "/" + file.Name()
 		destPath = dest + "/" + file.Name()
+
+		if src == dest {
+			continue
+		}
 
 		if flags.Recursive && file.IsDir() {
 			err = GenerateDirectory(srcPath, template, dest, flags)

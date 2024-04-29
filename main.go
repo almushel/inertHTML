@@ -25,12 +25,11 @@ func main() {
 	var flags InertFlags
 	var src, template, dest string
 
-	//flag.BoolVar(&flags.ForceCopy, "-f", false, "do not prompt before overwriting")
 	flag.BoolVar(&flags.NoClobber, "n", false, "do not overwrite an existing file")
 	flag.BoolVar(&flags.Interactive, "i", false, "prompt before overwrite")
 	flag.BoolVar(&flags.Recursive, "r", false, "process directories and their contents recursively")
 	flag.StringVar(&dest, "o", "", "write output to file/directory")
-	//flag.StringVar(&template, "t", "", "html template for parsed markdown")
+	flag.StringVar(&template, "t", "", "html template for parsed markdown")
 	flag.Parse()
 
 	if flags.NoClobber {
@@ -68,6 +67,14 @@ func main() {
 			dest += "/" + src[e:len(src)-len("md")] + "html"
 		} else if srcInfo.IsDir() && !destIsDir {
 			ErrPrintf("Cannot write output from directory %s to file %s\n", src, dest)
+			os.Exit(1)
+		}
+	}
+
+	if template != "" {
+		err = ValidateTemplateFile(template)
+		if err != nil {
+			ErrPrintln(err.Error())
 			os.Exit(1)
 		}
 	}
