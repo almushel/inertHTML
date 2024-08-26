@@ -239,9 +239,12 @@ func (nodeList TextNodeSlice) SplitImageNodes() ([]TextNode, error) {
 
 func (nodeList TextNodeSlice) SplitAll() ([]TextNode, error) {
 	delims := map[string]int{
-		"**": textTypeBold,
-		"*":  textTypeItalic,
-		"`":  textTypeCode,
+		"**":  textTypeBold,
+		"__":  textTypeBold,
+		"*":   textTypeItalic,
+		"_":   textTypeItalic,
+		"```": textTypeCode,
+		"`":   textTypeCode,
 	}
 	var result TextNodeSlice
 	var err error
