@@ -142,7 +142,7 @@ func GenerateDirectory(src, template, dest string, flags InertFlags) error {
 		}
 
 		if flags.Recursive && file.IsDir() {
-			err = GenerateDirectory(srcPath, template, dest, flags)
+			err = GenerateDirectory(srcPath, template, destPath, flags)
 		} else if strings.HasSuffix(srcPath, ".md") {
 			destFilePath := destPath[:len(destPath)-len("md")] + "html"
 			err = GeneratePageEx(srcPath, template, destFilePath, flags)
