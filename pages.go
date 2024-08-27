@@ -41,17 +41,30 @@ func ValidateTemplateFile(file string) error {
 	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to read template file: %s", err.Error()))
 	}
+	template = strings.TrimSpace(template)
 
-	substrs := []string{
-		"<html>", "</html>",
-		"<body>", "</body>",
+	templateTags := []string{
 		"{{ Title }}", "{{ Content }}",
 	}
-
-	for _, s := range substrs {
-		if !strings.Contains(template, s) {
-			return errors.New(fmt.Sprintf("Invalid template: %s tag not found.", s))
+	for _, tag := range templateTags {
+		if !strings.Contains(template, tag) {
+			return errors.New(fmt.Sprintf("Invalid template: %s tag not found.", tag))
 		}
+	}
+
+	htmlTags := []string{
+		"<!DOCTYPE html>",
+		"<html", ">",
+		"<head>", "</head>",
+		"<body>", "</body>",
+		"</html>",
+	}
+	for _, tag := range htmlTags {
+		index := strings.Index(template, tag)
+		if index == -1 {
+			return errors.New(fmt.Sprintf("Invalid template: %s tag not found.", tag))
+		}
+		template = template[index:]
 	}
 
 	return nil
