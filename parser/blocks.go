@@ -21,17 +21,43 @@ func IsNumeric(r rune) bool {
 func ParseMDBlocks(md string) []string {
 	var result []string
 
-	var sep string
-	// Attempting to account for Windows newline format
-	if strings.Count(md, "\n\n") > strings.Count(md, "\r\n\r\n") {
-		sep = "\n\n"
-	} else {
-		sep = "\r\n\r\n"
+	// NOTE: Dealing with code blocks separately, because they are allowed to break whitespace rules
+	var start, end int
+	for start = 0; start < len(md); start++ {
+		if strings.HasPrefix(md[start:], "```\n") {
+			for inside := start + 3; inside < len(md); inside++ {
+				if strings.HasPrefix(md[inside:], "\n```") {
+					result = append(result, md[start:inside+4])
+
+					end = inside + 4
+					start = end
+
+					break
+				}
+			}
+		} else if strings.HasPrefix(md[start:], "\n\n") {
+			block := strings.TrimSpace(strings.TrimSpace(md[end:start]))
+
+			if len(block) > 0 {
+				result = append(result, block)
+			}
+
+			end = start
+			start += 1
+		} else if strings.HasPrefix(md[start:], "\r\n\r\n") {
+			block := strings.TrimSpace(strings.TrimSpace(md[end:start]))
+			if len(block) > 0 {
+				result = append(result, block)
+			}
+
+			end = start
+			start += 3
+		}
 	}
 
-	blocks := strings.Split(md, sep)
-	for _, b := range blocks {
-		result = append(result, strings.TrimSpace(b))
+	block := strings.TrimSpace(md[end:start])
+	if len(block) > 0 {
+		result = append(result, block)
 	}
 
 	return result
@@ -93,9 +119,9 @@ func GetBlockType(block string) int {
 		if valid {
 			return blockTypeOrderedList
 		}
-	} else if strings.HasPrefix(block, "```") {
+	} else if strings.HasPrefix(block, "```\n") {
 		// Code Block
-		if strings.HasSuffix(block, "```") {
+		if strings.HasSuffix(block, "\n```") {
 			return blockTypeCode
 		}
 	}
@@ -127,8 +153,8 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 
 		case blockTypeCode:
 			newNode = HtmlNode{
-				Tag:   "code",
-				Value: block[3+1 : len(block)-3],
+				Tag:   "pre",
+				Value: block[3+1 : len(block)-4],
 			}
 			break
 

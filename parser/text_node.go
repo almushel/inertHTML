@@ -237,14 +237,14 @@ func (nodeList TextNodeSlice) SplitImageNodes() ([]TextNode, error) {
 	)
 }
 
+// TODO: Escape sequences
 func (nodeList TextNodeSlice) SplitAll() ([]TextNode, error) {
 	delims := map[string]int{
-		"**":  textTypeBold,
-		"__":  textTypeBold,
-		"*":   textTypeItalic,
-		"_":   textTypeItalic,
-		"```": textTypeCode,
-		"`":   textTypeCode,
+		"**": textTypeBold,
+		"__": textTypeBold,
+		"*":  textTypeItalic,
+		"_":  textTypeItalic,
+		"`":  textTypeCode,
 	}
 	var result TextNodeSlice
 	var err error

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"html"
 )
 
 type HtmlNode struct {
@@ -11,6 +12,10 @@ type HtmlNode struct {
 }
 
 func (node *HtmlNode) ProcessInnerText() {
+	if node.Tag == "pre" {
+		return
+	}
+
 	if node.Value != "" {
 		var innerTextNodes TextNodeSlice
 		innerTextNodes = append(innerTextNodes, TextNode{
@@ -43,12 +48,14 @@ func (node *HtmlNode) ToHTML() string {
 	if node.Tag == "" {
 		result = node.Value
 	} else {
-		var children string
-		for _, child := range node.Children {
-			children += child.ToHTML() + "\n"
+		result = fmt.Sprintf("<%s%s>\n", node.Tag, node.PropsToHTML())
+		if len(node.Value) > 0 {
+			result += html.EscapeString(fmt.Sprintf("%s\n", node.Value))
 		}
-
-		result = fmt.Sprintf("<%s%s>%s%s</%s>", node.Tag, node.PropsToHTML(), node.Value, children, node.Tag)
+		for _, child := range node.Children {
+			result += child.ToHTML()
+		}
+		result += fmt.Sprintf("</%s>\n", node.Tag)
 	}
 
 	return result

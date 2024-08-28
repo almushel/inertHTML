@@ -51,6 +51,7 @@ func TestLinkSplit(t *testing.T) {
 	}
 }
 
+// TODO: Figure out why this test appears to be non-deterministic
 func TestSplitAll(t *testing.T) {
 	const nText string = "**bold text** *italic text* `code text` " +
 		"![image alt text](http://image.url) [link text](http://link.url)"
@@ -59,6 +60,7 @@ func TestSplitAll(t *testing.T) {
 	nodes = append(nodes, TextNode{TextType: textTypeText, Text: nText})
 	nodes, _ = nodes.SplitAll()
 
+	// NOTE: Shouldn't length be 9 and nodes[7] be the single space between the image and the link?
 	if len(nodes) != 8 ||
 		nodes[0].TextType != textTypeBold ||
 		nodes[2].TextType != textTypeItalic ||

@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -30,7 +31,7 @@ func TestMarkdownBlocks(t *testing.T) {
 
 	result := ParseMDBlocks(md)
 	if len(result) != len(blocks) {
-		t.Fatalf("Incorrect block count in result")
+		t.Fatalf("Incorrect block count in result:\n\n%v", result)
 	}
 }
 
@@ -63,13 +64,17 @@ func TestGetBlockType(t *testing.T) {
 	}
 }
 
+// NOTE: Tag result of "p" represents failure for all non-paragraph blocks
 func TestBlockstoHtmlNodes(t *testing.T) {
 	blocks := map[string]HtmlNode{
-		"Empty Paragraph":   {Tag: "p"},
-		"Heading 3":         {Tag: "h3", Value: "Heading 3"},
-		"Broken Heading 3":  {Tag: "p", Value: testBlocks["Broken Heading 3"]},
-		"Heading 7":         {Tag: "p", Value: testBlocks["Heading 7"]},
-		"Code Block":        {Tag: "code", Value: testBlocks["Code Block"][4 : len(testBlocks["Code Block"])-3]},
+		"Empty Paragraph":  {Tag: "p"},
+		"Heading 3":        {Tag: "h3", Value: "Heading 3"},
+		"Broken Heading 3": {Tag: "p", Value: testBlocks["Broken Heading 3"]},
+		"Heading 7":        {Tag: "p", Value: testBlocks["Heading 7"]},
+		"Code Block": {
+			Tag:   "pre",
+			Value: strings.TrimSpace(testBlocks["Code Block"][4 : len(testBlocks["Code Block"])-3]),
+		},
 		"Broken Code Block": {Tag: "p", Value: testBlocks["Broken Code Block"]},
 		"Blockquote":        {Tag: "blockquote", Value: "quote line 1\nquote line 2\nquote line 3"},
 		"Broken Blockquote": {Tag: "p", Value: testBlocks["Broken Blockquote"]},
