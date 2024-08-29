@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"html"
 	"strings"
 )
 
@@ -154,7 +155,7 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 		case blockTypeCode:
 			newNode = HtmlNode{
 				Tag:   "pre",
-				Value: block[3+1 : len(block)-4],
+				Value: html.EscapeString(block[3+1 : len(block)-4]),
 			}
 			break
 

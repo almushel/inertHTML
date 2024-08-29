@@ -71,30 +71,46 @@ func (node *TextNode) Split(delim string, splitType int) ([]TextNode, error) {
 	var result []TextNode
 	var err error
 
-	var evenType, oddType int
-	evenType = textTypeText
-	oddType = splitType
+	var indices []int
+	for i := 0; i < len(node.Text); i++ {
+		if strings.HasPrefix(node.Text[i:], delim) {
+			if i > 0 && node.Text[i-1] == '\\' {
+				continue
+			}
 
-	chunks := strings.Split(node.Text, delim)
-	if len(chunks)%2 != 0 {
-		err = errors.New(fmt.Sprintf("TextNode.Split(): missing closing delimiter %s", delim))
+			indices = append(indices, i)
+		}
 	}
 
-	for i, str := range chunks {
-		if str == "" {
-			continue
-		}
+	if len(indices) == 0 {
+		return []TextNode{*node}, nil
+	}
 
+	if indices[0] != 0 {
+		result = append(result, TextNode{
+			TextType: textTypeText,
+			Text:     node.Text[:indices[0]],
+		})
+	}
+
+	for i := range indices {
 		var chunkType int
 		if i%2 == 0 {
-			chunkType = evenType
+			chunkType = splitType
 		} else {
-			chunkType = oddType
+			chunkType = textTypeText
+		}
+
+		var splitText string
+		if i == len(indices)-1 {
+			splitText = node.Text[indices[i]+len(delim):]
+		} else {
+			splitText = node.Text[indices[i]+len(delim) : indices[i+1]]
 		}
 
 		result = append(result, TextNode{
 			TextType: chunkType,
-			Text:     str,
+			Text:     splitText,
 		})
 	}
 
@@ -237,7 +253,6 @@ func (nodeList TextNodeSlice) SplitImageNodes() ([]TextNode, error) {
 	)
 }
 
-// TODO: Escape sequences
 func (nodeList TextNodeSlice) SplitAll() ([]TextNode, error) {
 	delims := map[string]int{
 		"**": textTypeBold,
@@ -253,6 +268,18 @@ func (nodeList TextNodeSlice) SplitAll() ([]TextNode, error) {
 	result, err = result.SplitImageNodes()
 	for delim, tType := range delims {
 		result, err = result.Split(delim, tType)
+	}
+
+	replacer := strings.NewReplacer(
+		"\\*", "*",
+		"\\_", "_",
+		"\\`", "`",
+	)
+	for i := range result {
+		if strings.Contains(result[i].Text, "\\*") {
+			fmt.Println(result[i].Text)
+		}
+		result[i].Text = replacer.Replace(result[i].Text)
 	}
 
 	return result, err
