@@ -108,10 +108,12 @@ func (node *TextNode) Split(delim string, splitType int) ([]TextNode, error) {
 			splitText = node.Text[indices[i]+len(delim) : indices[i+1]]
 		}
 
-		result = append(result, TextNode{
-			TextType: chunkType,
-			Text:     splitText,
-		})
+		if len(splitText) > 0 {
+			result = append(result, TextNode{
+				TextType: chunkType,
+				Text:     splitText,
+			})
+		}
 	}
 
 	return result, err
@@ -276,9 +278,6 @@ func (nodeList TextNodeSlice) SplitAll() ([]TextNode, error) {
 		"\\`", "`",
 	)
 	for i := range result {
-		if strings.Contains(result[i].Text, "\\*") {
-			fmt.Println(result[i].Text)
-		}
 		result[i].Text = replacer.Replace(result[i].Text)
 	}
 

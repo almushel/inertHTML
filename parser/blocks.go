@@ -36,6 +36,14 @@ func ParseMDBlocks(md string) []string {
 					break
 				}
 			}
+		} else if strings.HasPrefix(md[start:], "\r\n\r\n") {
+			block := strings.TrimSpace(strings.TrimSpace(md[end:start]))
+			if len(block) > 0 {
+				result = append(result, block)
+			}
+
+			end = start
+			start += 3
 		} else if strings.HasPrefix(md[start:], "\n\n") {
 			block := strings.TrimSpace(strings.TrimSpace(md[end:start]))
 
@@ -45,14 +53,6 @@ func ParseMDBlocks(md string) []string {
 
 			end = start
 			start += 1
-		} else if strings.HasPrefix(md[start:], "\r\n\r\n") {
-			block := strings.TrimSpace(strings.TrimSpace(md[end:start]))
-			if len(block) > 0 {
-				result = append(result, block)
-			}
-
-			end = start
-			start += 3
 		}
 	}
 
@@ -68,6 +68,7 @@ func GetBlockType(block string) int {
 	if block == "" {
 		return blockTypeParagraph
 	}
+
 	if block[0] == '#' {
 		// Heading
 		for level, char := range block {
@@ -91,11 +92,13 @@ func GetBlockType(block string) int {
 		if valid {
 			return blockTypeQuote
 		}
-	} else if block[0] == '-' || block[0] == '*' {
+		// TODO: Nested lists
+		// TODO: Multi-line lists
+	} else if (block[0] == '-' || block[0] == '*') && block[1] == ' ' {
 		// Unordered List
 		var valid bool = true
 		for _, line := range strings.Split(block, "\n") {
-			if !(strings.HasPrefix(line, "* ") || strings.HasPrefix(line, "- ")) {
+			if !(strings.HasPrefix(line, "* ") || !strings.HasPrefix(line, "- ")) {
 				valid = false
 				break
 			}

@@ -21,7 +21,7 @@ func TestDelimSplit(t *testing.T) {
 
 	result, _ = result.Split("**", textTypeBold)
 	if len(result) != 4 || result[3].TextType != textTypeBold {
-		t.Fatalf("Incorrect Split() output for delimiter %s: %s", "**", fmt.Sprintf("%#v", result))
+		t.Fatalf("Incorrect Split() output for delimiter %s: %s", "**\n\n", fmt.Sprintf("%#v", result))
 	}
 }
 
