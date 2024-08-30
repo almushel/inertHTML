@@ -26,7 +26,7 @@ func ParseMDBlocks(md string) []string {
 	// NOTE: Dealing with code blocks separately, because they are allowed to break whitespace rules
 	var start, end int
 	for start = 0; start < len(md); start++ {
-		if strings.HasPrefix(md[start:], "```\n") {
+		if strings.HasPrefix(md[start:], "```") {
 			for inside := start + 3; inside < len(md); inside++ {
 				if strings.HasPrefix(md[inside:], "\n```") {
 					result = append(result, md[start:inside+4])
@@ -57,9 +57,11 @@ func ParseMDBlocks(md string) []string {
 		}
 	}
 
-	block := strings.TrimSpace(md[end:start])
-	if len(block) > 0 {
-		result = append(result, block)
+	if start < len(md) {
+		block := strings.TrimSpace(md[end:start])
+		if len(block) > 0 {
+			result = append(result, block)
+		}
 	}
 
 	return result
@@ -123,7 +125,7 @@ func GetBlockType(block string) int {
 		if valid {
 			return blockTypeOrderedList
 		}
-	} else if strings.HasPrefix(block, "```\n") {
+	} else if strings.HasPrefix(block, "```") {
 		// Code Block
 		if strings.HasSuffix(block, "\n```") {
 			return blockTypeCode
@@ -158,10 +160,25 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 			break
 
 		case blockTypeCode:
+			opening, body, _ := strings.Cut(block, "\n")
+			lang, name, _ := strings.Cut(opening[len("```"):], " ")
 			newNode = HtmlNode{
-				Tag:   "pre",
-				Value: html.EscapeString(block[3+1 : len(block)-4]),
+				Tag: "pre",
+				Value: html.EscapeString(
+					strings.TrimSpace(
+						body[:len(body)-len("```")],
+					),
+				),
 			}
+			newNode.Props = make(map[string]string)
+			if len(lang) > 0 {
+				newNode.Props["class"] = "language-" + lang
+			}
+
+			if len(name) > 0 {
+				newNode.Props["title"] = name
+			}
+
 			break
 
 		case blockTypeQuote:
