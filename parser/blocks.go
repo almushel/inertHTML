@@ -8,11 +8,12 @@ import (
 
 const (
 	blockTypeParagraph = iota
-	blockTypeHeading
 	blockTypeCode
-	blockTypeQuote
+	blockTypeHeading
+	blockTypeHorizontalRule
 	blockTypeOrderedList
 	blockTypeUnorderedList
+	blockTypeQuote
 )
 
 func IsNumeric(r rune) bool {
@@ -92,8 +93,7 @@ func GetBlockType(block string) int {
 		if valid {
 			return blockTypeQuote
 		}
-		// TODO: Nested lists
-		// TODO: Multi-line lists
+		/* TODO: Nested lists */
 	} else if (block[0] == '-' || block[0] == '*') && block[1] == ' ' {
 		// Unordered List
 		var valid bool = true
@@ -128,6 +128,8 @@ func GetBlockType(block string) int {
 		if strings.HasSuffix(block, "\n```") {
 			return blockTypeCode
 		}
+	} else if block == "***" || block == "---" || block == "___" {
+		return blockTypeHorizontalRule
 	}
 
 	return blockTypeParagraph
@@ -199,6 +201,11 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 					Tag:   "li",
 					Value: line[2:],
 				})
+			}
+			break
+		case blockTypeHorizontalRule:
+			newNode = HtmlNode{
+				Tag: "hr",
 			}
 			break
 		default:
