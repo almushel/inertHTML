@@ -89,12 +89,22 @@ func GeneratePage(src, template, dest string) error {
 		return err
 	}
 
+	// Detect and remove YAML frontmatter
+	if strings.HasPrefix(srcTxt, "---\n") {
+		_, body, found := strings.Cut(srcTxt[len("---\n"):], "\n---")
+		if found {
+			srcTxt = body
+		}
+	}
+	// TODO: Process YAML frontmatter
+
 	destFile, err := CreateAll(dest)
 	defer destFile.Close()
 	if err != nil {
 		return err
 	}
 
+	// TODO: Remove template processing from parser
 	result, err := parser.MDtoHTML(srcTxt, templateStr)
 	if err != nil {
 		return err

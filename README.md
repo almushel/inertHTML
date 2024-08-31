@@ -19,6 +19,7 @@ inertHTML directory
 
 By default only the files at the top level of the source directory will be processed.
 To recursively process all subdirectories, enable the `-r` flag.
+The structure of the source directory will be reproduced in the output folder if `-o` is enabled.
 This will be ignored if the source is a file.
 
 ```sh
@@ -65,3 +66,21 @@ This behavior can be changed with the following boolean flags:
 * `-n`: No clobber. Quietly skips any existing files. 
 * `-i`: Interactive mode. Asks for confirmation to overwrite each existing file.
 
+## Markdown Features
+
+inertHTML currently supports the majority of standard markdown syntax and some extensions,
+prioritized based on what I needed for my own use.
+
+### Limitations
+
+Standard markdown syntax that is currently not supported (i.e. to-do):
+
+- Nested lists
+- Double trailing space line breaks
+- Indent-based code blocks
+
+### Extensions
+
+- Fenced codeblocks
+- HTML
+- Limited YAML frontmatter (detected and removed from output)
