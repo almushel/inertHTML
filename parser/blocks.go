@@ -14,6 +14,7 @@ const (
 	blockTypeOrderedList
 	blockTypeUnorderedList
 	blockTypeQuote
+	blockTypeTable
 )
 
 func IsNumeric(r rune) bool {
@@ -108,6 +109,39 @@ func GetBlockType(block string) int {
 		if valid {
 			return blockTypeUnorderedList
 		}
+	} else if block[0] == '|' {
+		var bars int
+		for i, line := range strings.Split(strings.TrimSpace(block), "\n") {
+			if i == 0 { // | title1 | title2 |
+				if line[0] != '|' || line[len(line)-1] != '|' {
+					return blockTypeParagraph
+				}
+
+				bars = strings.Count(line, "|")
+			} else if i == 1 { // | :--- | ---: |
+				if line[0] != '|' ||
+					line[len(line)-1] != '|' ||
+					strings.Count(line, "|") != bars {
+					return blockTypeParagraph
+				}
+
+				const allowed = "-: "
+				for _, divider := range strings.Split(strings.Trim(line, "|"), "|") {
+					if strings.Count(divider, "-") < 3 ||
+						len(strings.Trim(divider, allowed)) > 0 {
+						return blockTypeParagraph
+					}
+				}
+			} else { // | content | content |
+				if strings.Count(line, "|") != bars {
+					return blockTypeParagraph
+				}
+			}
+		}
+
+		return blockTypeTable
+	} else if block == "***" || block == "---" || block == "___" {
+		return blockTypeHorizontalRule
 	} else if IsNumeric([]rune(block)[0]) {
 		// Ordered List
 		var valid bool = true
@@ -130,8 +164,6 @@ func GetBlockType(block string) int {
 		if strings.HasSuffix(block, "\n```") {
 			return blockTypeCode
 		}
-	} else if block == "***" || block == "---" || block == "___" {
-		return blockTypeHorizontalRule
 	}
 
 	return blockTypeParagraph
@@ -191,6 +223,7 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 				Value: quoteText[:len(quoteText)-1],
 			}
 			break
+
 		case blockTypeOrderedList:
 			newNode = HtmlNode{
 				Tag: "ol",
@@ -209,6 +242,7 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 				})
 			}
 			break
+
 		case blockTypeUnorderedList:
 			newNode = HtmlNode{
 				Tag: "ul",
@@ -225,6 +259,14 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 				Tag: "hr",
 			}
 			break
+
+		case blockTypeTable:
+			newNode = HtmlNode{
+				Tag:   "table",
+				Value: "TABLE",
+			}
+			break
+
 		default:
 			newNode = HtmlNode{
 				Tag:   "p",
