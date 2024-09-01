@@ -125,10 +125,17 @@ func GetBlockType(block string) int {
 					return blockTypeParagraph
 				}
 
-				const allowed = "-: "
-				for _, divider := range strings.Split(strings.Trim(line, "|"), "|") {
-					if strings.Count(divider, "-") < 3 ||
-						len(strings.Trim(divider, allowed)) > 0 {
+				for _, cell := range strings.Split(strings.Trim(line, "|"), "|") {
+					cell = strings.TrimSpace(cell)
+					if strings.HasPrefix(cell, ":-") {
+						cell = cell[1:]
+					}
+					if strings.HasSuffix(cell, "-:") {
+						cell = cell[:len(cell)-1]
+					}
+
+					if strings.Count(cell, "-") < 3 ||
+						len(strings.Trim(cell, "-")) > 0 {
 						return blockTypeParagraph
 					}
 				}
@@ -262,9 +269,63 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 
 		case blockTypeTable:
 			newNode = HtmlNode{
-				Tag:   "table",
-				Value: "TABLE",
+				Tag: "table",
 			}
+
+			lines := strings.Split(block, "\n")
+			divider := strings.Split(strings.Trim(lines[1], "|"), "|")
+			var alignments []string
+
+			for _, cell := range divider {
+				c := strings.TrimSpace(cell)
+				left := strings.HasPrefix(c, ":")
+				right := strings.HasSuffix(c, ":")
+
+				if left && right {
+					alignments = append(alignments, "center")
+				} else if right && !left {
+					alignments = append(alignments, "right")
+				} else {
+					alignments = append(alignments, "left")
+				}
+			}
+
+			head := HtmlNode{Tag: "thead"}
+			body := HtmlNode{Tag: "tbody"}
+
+			var tag string
+			for i, line := range lines {
+				if i == 1 {
+					continue
+				} else if i == 0 {
+					tag = "th"
+				} else {
+					tag = "td"
+				}
+
+				row := HtmlNode{
+					Tag: "tr",
+				}
+				cells := strings.Split(strings.Trim(line, "|"), "|")
+				for i, cell := range cells {
+					row.Children = append(row.Children, HtmlNode{
+						Tag:   tag,
+						Value: strings.TrimSpace(cell),
+						Props: map[string]string{
+							"style": "text-align: " + alignments[i],
+						},
+					})
+				}
+
+				if i == 0 {
+					head.Children = append(head.Children, row)
+				} else {
+					body.Children = append(body.Children, row)
+				}
+			}
+
+			newNode.Children = append(newNode.Children, head, body)
+
 			break
 
 		default:

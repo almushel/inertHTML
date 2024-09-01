@@ -27,7 +27,6 @@ This will be ignored if the source is a file.
 inertHTML -r directory
 ```
 
-
 ### Output
 
 If the `-o` flag is defined, the results will be output there.
@@ -82,5 +81,6 @@ Standard markdown syntax that is currently not supported (i.e. to-do):
 ### Extensions
 
 - Fenced codeblocks
-- HTML
+- Tables
+- HTML in .md files
 - Limited YAML frontmatter (detected and removed from output)
