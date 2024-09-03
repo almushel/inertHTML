@@ -110,7 +110,6 @@ func GeneratePage(src, template, dest string) error {
 		return err
 	}
 
-	fmt.Printf("MD -> HTML: %s -> %s\n", src, dest)
 	return os.WriteFile(dest, []byte(result), 0666)
 }
 
@@ -131,6 +130,9 @@ func GeneratePageEx(src, template, dest string, flags InertFlags) error {
 		}
 	}
 
+	if flags.Verbose {
+		fmt.Printf("MD -> HTML: %s -> %s\n", src, dest)
+	}
 	return GeneratePage(src, template, dest)
 }
 
@@ -147,11 +149,10 @@ func GenerateDirectory(src, template, dest string, flags InertFlags) error {
 		srcPath = src + "/" + file.Name()
 		destPath = dest + "/" + file.Name()
 
-		if src == dest {
-			continue
-		}
-
 		if flags.Recursive && file.IsDir() {
+			if flags.Verbose {
+				fmt.Printf("Processing directory: %s\n", srcPath)
+			}
 			err = GenerateDirectory(srcPath, template, destPath, flags)
 		} else if strings.HasSuffix(srcPath, ".md") {
 			destFilePath := destPath[:len(destPath)-len("md")] + "html"

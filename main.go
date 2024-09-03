@@ -9,7 +9,7 @@ import (
 )
 
 type InertFlags struct {
-	NoClobber, Interactive, Recursive bool
+	NoClobber, Interactive, Recursive, Verbose bool
 }
 
 func ErrPrintf(format string, a ...any) (int, error) {
@@ -28,6 +28,7 @@ func main() {
 	flag.BoolVar(&flags.NoClobber, "n", false, "do not overwrite an existing file")
 	flag.BoolVar(&flags.Interactive, "i", false, "prompt before overwrite")
 	flag.BoolVar(&flags.Recursive, "r", false, "process directories and their contents recursively")
+	flag.BoolVar(&flags.Verbose, "v", false, "explain what is being done")
 	flag.StringVar(&dest, "o", "", "write output to file/directory")
 	flag.StringVar(&template, "t", "", "html template for parsed markdown")
 	flag.Parse()
@@ -87,5 +88,6 @@ func main() {
 
 	if err != nil {
 		ErrPrintln(err.Error())
+		os.Exit(1)
 	}
 }
