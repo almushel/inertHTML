@@ -58,7 +58,7 @@ func ParseMDBlocks(md string) []string {
 		}
 	}
 
-	if start < len(md) {
+	if end < len(md) {
 		block := strings.TrimSpace(md[end:start])
 		if len(block) > 0 {
 			result = append(result, block)
@@ -180,6 +180,7 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 	var result []HtmlNode
 	var err error
 	var newNode HtmlNode
+
 	for _, block := range blocks {
 		switch GetBlockType(block) {
 
