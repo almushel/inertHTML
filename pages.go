@@ -130,6 +130,18 @@ func GeneratePageEx(src, template, dest string, flags InertFlags) error {
 		}
 	}
 
+	if flags.PagesAsDirs {
+		info, err := os.Stat(src)
+		if err != nil {
+			return err
+		}
+
+		if info.Name() != "index.md" {
+			dest = dest[:len(dest)-len(".html")] + "/index.html"
+		}
+
+	}
+
 	if flags.Verbose {
 		fmt.Printf("MD -> HTML: %s -> %s\n", src, dest)
 	}

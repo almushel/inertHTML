@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -9,7 +8,7 @@ import (
 )
 
 type InertFlags struct {
-	NoClobber, Interactive, Recursive, Verbose bool
+	Interactive, NoClobber, Recursive, Verbose, PagesAsDirs bool
 }
 
 func ErrPrintf(format string, a ...any) (int, error) {
@@ -29,6 +28,7 @@ func main() {
 	flag.BoolVar(&flags.Interactive, "i", false, "prompt before overwrite")
 	flag.BoolVar(&flags.Recursive, "r", false, "process directories and their contents recursively")
 	flag.BoolVar(&flags.Verbose, "v", false, "explain what is being done")
+	flag.BoolVar(&flags.PagesAsDirs, "pagesAsDirs", false, "convert non-index source files to dest/index.html")
 	flag.StringVar(&dest, "o", "", "write output to file/directory")
 	flag.StringVar(&template, "t", "", "html template for parsed markdown")
 	flag.Parse()
