@@ -11,7 +11,7 @@ type HtmlNode struct {
 }
 
 func (node *HtmlNode) ProcessInnerText() {
-	if node.Tag == "pre" {
+	if node.Tag == "pre" || node.Tag == "code" {
 		return
 	}
 

@@ -256,20 +256,26 @@ func (nodeList TextNodeSlice) SplitImageNodes() ([]TextNode, error) {
 }
 
 func (nodeList TextNodeSlice) SplitAll() ([]TextNode, error) {
-	delims := map[string]int{
-		"**": textTypeBold,
-		"__": textTypeBold,
-		"*":  textTypeItalic,
-		"_":  textTypeItalic,
-		"`":  textTypeCode,
+	type textDelim struct {
+		d string
+		t int
 	}
+
+	delims := []textDelim{
+		{"`", textTypeCode},
+		{"**", textTypeBold},
+		{"__", textTypeBold},
+		{"*", textTypeItalic},
+		{"_", textTypeItalic},
+	}
+
 	var result TextNodeSlice
 	var err error
 
 	result, err = nodeList.SplitLinkNodes()
 	result, err = result.SplitImageNodes()
-	for delim, tType := range delims {
-		result, err = result.Split(delim, tType)
+	for _, delim := range delims {
+		result, err = result.Split(delim.d, delim.t)
 	}
 
 	replacer := strings.NewReplacer(

@@ -52,6 +52,7 @@ func TestLinkSplit(t *testing.T) {
 }
 
 // TODO: Figure out why this test appears to be non-deterministic
+// NOTE: Likely because delimiter list was a map
 func TestSplitAll(t *testing.T) {
 	const nText string = "**bold text** *italic text* `code text` " +
 		"![image alt text](http://image.url) [link text](http://link.url)"
