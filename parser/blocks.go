@@ -176,6 +176,28 @@ func GetBlockType(block string) int {
 	return blockTypeParagraph
 }
 
+func generateValidId(value string) string {
+	remove := []string{
+		"`", "[", "]", "(", ")", ":", ";", ".", "?",
+		"=", "+", "%", "^", "$", "#", "@", "!",
+		"*", "~", "{", "}", "^", "<", ">",
+	}
+	replace := []string{
+		" ", "-",
+	}
+	for _, r := range remove {
+		replace = append(replace, r, "")
+	}
+
+	replacer := strings.NewReplacer(replace...)
+
+	return strings.ToLower(
+		html.EscapeString(
+			replacer.Replace(value),
+		),
+	)
+}
+
 func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 	var result []HtmlNode
 	var err error
@@ -197,6 +219,8 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 				Tag:   "h" + fmt.Sprintf("%v", i),
 				Value: block[i+1:],
 			}
+
+			newNode.Props = map[string]string{"id": generateValidId(newNode.Value)}
 			break
 
 		case blockTypeCode:
