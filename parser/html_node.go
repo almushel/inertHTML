@@ -48,14 +48,12 @@ func (node *HtmlNode) ToHTML() string {
 	if node.Tag == "" {
 		result = node.Value
 	} else {
-		result = fmt.Sprintf("<%s%s>\n", node.Tag, node.PropsToHTML())
-		if len(node.Value) > 0 {
-			result += fmt.Sprintf("%s\n", node.Value)
-		}
+		var children string = node.Value
 		for _, child := range node.Children {
-			result += child.ToHTML()
+			children += child.ToHTML()
 		}
-		result += fmt.Sprintf("</%s>\n", node.Tag)
+
+		result = fmt.Sprintf("<%s%s>%s</%s>", node.Tag, node.PropsToHTML(), children, node.Tag)
 	}
 
 	return result
