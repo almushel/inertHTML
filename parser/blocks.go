@@ -39,7 +39,7 @@ func ParseMDBlocks(md string) []string {
 				}
 			}
 		} else if strings.HasPrefix(md[start:], "\r\n\r\n") {
-			block := strings.TrimSpace(strings.TrimSpace(md[end:start]))
+			block := strings.TrimSpace(md[end:start])
 			if len(block) > 0 {
 				result = append(result, block)
 			}
@@ -47,7 +47,7 @@ func ParseMDBlocks(md string) []string {
 			end = start
 			start += 3
 		} else if strings.HasPrefix(md[start:], "\n\n") {
-			block := strings.TrimSpace(strings.TrimSpace(md[end:start]))
+			block := strings.TrimSpace(md[end:start])
 
 			if len(block) > 0 {
 				result = append(result, block)
@@ -270,6 +270,10 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 
 		case blockTypeTable:
 			newNode = HtmlNode{
+				Tag:   "div",
+				Props: map[string]string{"style": "overflow-x:auto;"},
+			}
+			table := HtmlNode{
 				Tag: "table",
 			}
 
@@ -325,7 +329,8 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 				}
 			}
 
-			newNode.Children = append(newNode.Children, head, body)
+			table.Children = append(table.Children, head, body)
+			newNode.Children = append(newNode.Children, table)
 
 			break
 
