@@ -180,7 +180,7 @@ func (node *TextNode) SplitImageNodes() ([]TextNode, error) {
 	return node.SplitExp(pattern, marshal)
 }
 
-// NOTE: This will also match images, and so should be run after SplitImagesNodes
+// NOTE: This will also match images, and so should be run after SplitImageNodes
 func (node *TextNode) SplitLinkNodes() ([]TextNode, error) {
 	const link = `\[(.*?)\]\((.*?)\)`
 
@@ -272,8 +272,8 @@ func (nodeList TextNodeSlice) SplitAll() ([]TextNode, error) {
 	var result TextNodeSlice
 	var err error
 
-	result, err = result.SplitImageNodes()
-	result, err = nodeList.SplitLinkNodes()
+	result, err = nodeList.SplitImageNodes()
+	result, err = result.SplitLinkNodes()
 	for _, delim := range delims {
 		result, err = result.Split(delim.d, delim.t)
 	}

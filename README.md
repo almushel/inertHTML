@@ -1,11 +1,12 @@
 # inertHTML
-A static site generator for converting markdown files to simple HTML.
+
+A static site generator for converting markdown files to templated HTML.
 
 ## Usage
 
 At a minimum, a positional source argument is required.
 This can be either a single markdown file or a directory containing markdown files.
-By default, the output will be written to quivalent html files in the same directory.
+By default, the output will be written to equivalent html files in the same directory.
 
 ```sh
 # Parses file.md and outputs file.html in the same directory
@@ -15,23 +16,11 @@ inertHTML file.md
 inertHTML directory
 ```
 
-### Recursion
-
-By default only the files at the top level of the source directory will be processed.
-To recursively process all subdirectories, enable the `-r` flag.
-The structure of the source directory will be reproduced in the output folder if `-o` is enabled.
-This will be ignored if the source is a file.
-
-```sh
-# Parses *.md files in directory and all subdirectories and outputs *.html files in place
-inertHTML -r directory
-```
-
 ### Output
 
 If the `-o` flag is defined, the results will be output there.
 Like the source, this can be a file or a directory.
-However, setting `-o` to a directory for a file source will return an error.
+However, setting `-o` to a file when the source is a directory will return an error.
 
 ```sh
 # Writes to file.html
@@ -47,10 +36,22 @@ inertHTML -o destDir srcDir
 inertHTML -o file.html srcDir
 ```
 
+### Recursion
+
+By default only the files at the top level of the source directory will be processed.
+To recursively process all subdirectories, enable the `-r` flag.
+The structure of the source directory will be reproduced in the output folder if `-o` is enabled.
+This will be ignored if the source is a file.
+
+```sh
+# Parses *.md files in directory and all subdirectories and outputs *.html files in place
+inertHTML -r directory
+```
+
 ### Templates
 
 A custom template file can be specified with the `-t` flag.
-This file must be a valid html file with `<html>` and `<body>` tags
+This file must be a valid html file with `<html>`, `<head>`, and `<body>` tags
 as well as `{{ Title }}` and `{{ Content }}` template tags.
 
 ```sh
@@ -84,3 +85,4 @@ Standard markdown syntax that is currently not supported (i.e. to-do):
 - Tables
 - HTML in .md files
 - Limited YAML frontmatter (detected and removed from output)
+
