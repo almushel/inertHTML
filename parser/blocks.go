@@ -101,7 +101,7 @@ func GetBlockType(block string) int {
 		// Unordered List
 		var valid bool = true
 		for _, line := range strings.Split(block, "\n") {
-			if !(strings.HasPrefix(line, "* ") || !strings.HasPrefix(line, "- ")) {
+			if !(strings.HasPrefix(line, "* ") || strings.HasPrefix(line, "- ")) {
 				valid = false
 				break
 			}
