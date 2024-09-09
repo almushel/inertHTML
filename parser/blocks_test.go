@@ -16,6 +16,7 @@ var testBlocks map[string]string = map[string]string{
 	"Broken Blockquote": ">>>quote line 1\nquote line 2\n>>>quote line 3",
 	"Unordered List":    "* UL item 1\n- UL item 2\n* UL item 3",
 	"Ordered List":      "1. OL item 1\n2. OL item 2\n3. OL item 3",
+	"Leading Escape":    "\\* This line starts with an escaped asterisk",
 }
 
 func TestMarkdownBlocks(t *testing.T) {
@@ -52,6 +53,7 @@ func TestGetBlockType(t *testing.T) {
 		"Broken Blockquote": blockTypeParagraph,
 		"Unordered List":    blockTypeUnorderedList,
 		"Ordered List":      blockTypeOrderedList,
+		"Leading Escape":    blockTypeParagraph,
 	}
 
 	for key, b := range blocks {
@@ -80,6 +82,7 @@ func TestBlockstoHtmlNodes(t *testing.T) {
 		"Broken Blockquote": {Tag: "p", Value: testBlocks["Broken Blockquote"]},
 		"Unordered List":    {Tag: "ul"},
 		"Ordered List":      {Tag: "ol"},
+		"Leading Escape":    {Tag: "p"},
 	}
 
 	for key, b := range blocks {

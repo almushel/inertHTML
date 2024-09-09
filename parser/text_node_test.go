@@ -51,10 +51,8 @@ func TestLinkSplit(t *testing.T) {
 	}
 }
 
-// TODO: Figure out why this test appears to be non-deterministic
-// NOTE: Likely because delimiter list was a map
 func TestSplitAll(t *testing.T) {
-	const nText string = "**bold text** *italic text* `code text` " +
+	const nText string = "**bold text** _italic text_ `code text` " +
 		"![image alt text](http://image.url) [link text](http://link.url)"
 
 	var nodes TextNodeSlice
@@ -62,12 +60,12 @@ func TestSplitAll(t *testing.T) {
 	nodes, _ = nodes.SplitAll()
 
 	// NOTE: Shouldn't length be 9 and nodes[7] be the single space between the image and the link?
-	if len(nodes) != 8 ||
+	if len(nodes) != 9 ||
 		nodes[0].TextType != textTypeBold ||
 		nodes[2].TextType != textTypeItalic ||
 		nodes[4].TextType != textTypeCode ||
 		nodes[6].TextType != textTypeImage ||
-		nodes[7].TextType != textTypeLink {
-		t.Fatalf("Incorrect output for SplitAll():\nInput:\n%s\n%s", nText, nodes.ToString())
+		nodes[8].TextType != textTypeLink {
+		t.Fatalf("Incorrect output for SplitAll():\nInput:\n%s\nOutput:\n%s", nText, nodes.ToString())
 	}
 }

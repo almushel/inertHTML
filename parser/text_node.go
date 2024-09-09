@@ -24,7 +24,7 @@ type TextNode struct {
 type TextNodeSlice []TextNode
 type TextNodeSplitFunc func(*TextNode) ([]TextNode, error)
 
-func (node *TextNode) ToHTMLNode() (HtmlNode, error) {
+func (node TextNode) ToHTMLNode() (HtmlNode, error) {
 	var result HtmlNode
 	var err error
 
@@ -63,9 +63,9 @@ func (node *TextNode) ToHTMLNode() (HtmlNode, error) {
 	return result, err
 }
 
-func (node *TextNode) Split(delim string, splitType int) ([]TextNode, error) {
+func (node TextNode) Split(delim string, splitType int) ([]TextNode, error) {
 	if node.TextType != textTypeText {
-		return []TextNode{*node}, nil
+		return []TextNode{node}, nil
 	}
 
 	var result []TextNode
@@ -75,7 +75,9 @@ func (node *TextNode) Split(delim string, splitType int) ([]TextNode, error) {
 	for i := 0; i < len(node.Text); i++ {
 		if strings.HasPrefix(node.Text[i:], delim) {
 			if i > 0 && node.Text[i-1] == '\\' {
-				continue
+				if !(i > 1 && node.Text[i-2] == '\\') {
+					continue
+				}
 			}
 
 			indices = append(indices, i)
@@ -83,7 +85,7 @@ func (node *TextNode) Split(delim string, splitType int) ([]TextNode, error) {
 	}
 
 	if len(indices) == 0 {
-		return []TextNode{*node}, nil
+		return []TextNode{node}, nil
 	}
 
 	if indices[0] != 0 {
@@ -119,14 +121,14 @@ func (node *TextNode) Split(delim string, splitType int) ([]TextNode, error) {
 	return result, err
 }
 
-func (node *TextNode) SplitExp(pattern string, marshal func([]string) TextNode) ([]TextNode, error) {
+func (node TextNode) SplitExp(pattern string, marshal func([]string) TextNode) ([]TextNode, error) {
 	if node.TextType != textTypeText {
-		return []TextNode{*node}, nil
+		return []TextNode{node}, nil
 	}
 
 	expr, err := regexp.Compile(pattern)
 	if err != nil {
-		return []TextNode{*node}, err
+		return []TextNode{node}, err
 	}
 
 	var result []TextNode
@@ -163,7 +165,7 @@ func (node *TextNode) SplitExp(pattern string, marshal func([]string) TextNode) 
 	return result, err
 }
 
-func (node *TextNode) SplitImageNodes() ([]TextNode, error) {
+func (node TextNode) SplitImageNodes() ([]TextNode, error) {
 	const pattern = `!\[(.*?)\]\((.*?)\)`
 	marshal := func(match []string) TextNode {
 		var result TextNode
@@ -181,7 +183,7 @@ func (node *TextNode) SplitImageNodes() ([]TextNode, error) {
 }
 
 // NOTE: This will also match images, and so should be run after SplitImageNodes
-func (node *TextNode) SplitLinkNodes() ([]TextNode, error) {
+func (node TextNode) SplitLinkNodes() ([]TextNode, error) {
 	const link = `\[(.*?)\]\((.*?)\)`
 
 	marshal := func(match []string) TextNode {
@@ -276,15 +278,6 @@ func (nodeList TextNodeSlice) SplitAll() ([]TextNode, error) {
 	result, err = result.SplitLinkNodes()
 	for _, delim := range delims {
 		result, err = result.Split(delim.d, delim.t)
-	}
-
-	replacer := strings.NewReplacer(
-		"\\*", "*",
-		"\\_", "_",
-		"\\`", "`",
-	)
-	for i := range result {
-		result[i].Text = replacer.Replace(result[i].Text)
 	}
 
 	return result, err

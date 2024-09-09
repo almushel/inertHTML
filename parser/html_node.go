@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strings"
 )
 
 type HtmlNode struct {
@@ -39,6 +40,21 @@ func (node *HtmlNode) ProcessInnerText() {
 		for i := range node.Children {
 			node.Children[i].ProcessInnerText()
 		}
+	}
+}
+
+func (node *HtmlNode) UnescapeMD() {
+	replacer := strings.NewReplacer(
+		"\\*", "*",
+		"\\_", "_",
+		"\\`", "`",
+		"\\\\", "\\",
+	)
+
+	node.Value = replacer.Replace(node.Value)
+
+	for i := range node.Children {
+		node.Children[i].UnescapeMD()
 	}
 }
 

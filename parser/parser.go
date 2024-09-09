@@ -17,6 +17,7 @@ func MDtoHTML(src, template string) (string, error) {
 
 	for i := range blockNodes {
 		blockNodes[i].ProcessInnerText()
+		blockNodes[i].UnescapeMD()
 	}
 
 	var body string
