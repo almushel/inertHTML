@@ -257,10 +257,8 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 			break
 
 		case blockTypeOrderedList:
-			newNode = HtmlNode{
-				Tag: "ol",
-			}
-			for _, line := range strings.Split(block, "\n") {
+			newNode = NewHtmlNode("ol", "", nil, nil)
+			for lineNumber, line := range strings.Split(block, "\n") {
 				var i int
 				var c rune
 				for i, c = range line {
@@ -268,6 +266,10 @@ func BlocksToHTMLNodes(blocks []string) ([]HtmlNode, error) {
 						break
 					}
 				}
+				if lineNumber == 0 {
+					newNode.Props["start"] = line[:i]
+				}
+
 				newNode.Children = append(newNode.Children, HtmlNode{
 					Tag:   "li",
 					Value: line[i+2:],
