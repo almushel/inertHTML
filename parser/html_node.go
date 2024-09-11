@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -76,8 +77,18 @@ func (node *HtmlNode) ToHTML() string {
 }
 
 func (node *HtmlNode) PropsToHTML() string {
+	keys := make([]string, len(node.Props))
+
+	var i int
+	for k := range node.Props {
+		keys[i] = k
+		i++
+	}
+	slices.Sort(keys)
+
 	var result string
-	for key, val := range node.Props {
+	for _, key := range keys {
+		val := node.Props[key]
 		result += fmt.Sprintf(" %s=\"%s\"", key, val)
 	}
 
