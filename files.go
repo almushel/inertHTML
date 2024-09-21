@@ -3,17 +3,14 @@ package main
 import (
 	"io/fs"
 	"os"
-	"strings"
+	"path/filepath"
 )
 
 // os.Create for complete path to file
 func CreateAll(name string) (*os.File, error) {
-	var i int = strings.LastIndex(name, "/")
-	if i >= 0 {
-		err := os.MkdirAll(name[:i], 0700)
-		if err != nil {
-			return nil, err
-		}
+	err := os.MkdirAll(filepath.Dir(name), 0700)
+	if err != nil {
+		return nil, err
 	}
 
 	return os.Create(name)

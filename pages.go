@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/almushel/inertHTML/parser"
@@ -158,15 +159,15 @@ func GenerateDirectory(src, template, dest string, flags InertFlags) error {
 
 	var srcPath, destPath string
 	for _, file := range files {
-		srcPath = src + "/" + file.Name()
-		destPath = dest + "/" + file.Name()
+		srcPath = filepath.Join(src, file.Name())
+		destPath = filepath.Join(dest, file.Name())
 
 		if flags.Recursive && file.IsDir() {
 			if flags.Verbose {
 				fmt.Printf("Processing directory: %s\n", srcPath)
 			}
 			err = GenerateDirectory(srcPath, template, destPath, flags)
-		} else if strings.HasSuffix(srcPath, ".md") {
+		} else if filepath.Ext(srcPath) == ".md" {
 			destFilePath := destPath[:len(destPath)-len("md")] + "html"
 			err = GeneratePageEx(srcPath, template, destFilePath, flags)
 		}

@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
+	"path/filepath"
 )
 
 type InertFlags struct {
@@ -42,30 +42,36 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	src = flag.Arg(0)
+	src = filepath.Clean(flag.Arg(0))
 
 	srcInfo, err := os.Stat(src)
 	if err != nil {
 		ErrPrintln(err.Error())
 		os.Exit(1)
-	} else if !srcInfo.IsDir() && !strings.HasSuffix(src, ".md") {
+	} else if !srcInfo.IsDir() && filepath.Ext(src) != ".md" {
 		ErrPrintln("Invalid source. Directory or *.md file expected")
 		os.Exit(1)
 	}
 
 	if dest == "" {
-		if strings.HasSuffix(src, ".md") {
-			dest = src[:len(src)-len("md")] + "html"
-		} else {
+		if srcInfo.IsDir() {
 			dest = src
+		} else {
+			dest = src[:len(src)-len("md")] + "html"
 		}
 	} else {
-		destEnd := dest[strings.LastIndex(dest, "/")+1:]
-		destIsDir := !(strings.Count(destEnd, ".") > 0)
+		dest = filepath.Clean(dest)
+		destExt := filepath.Ext(dest)
+		destIsDir := (destExt == "")
+		if !destIsDir && destExt != ".html" {
+			ErrPrintln("Invalid output. Directory or *.html file expected")
+			os.Exit(1)
+		}
 
 		if !srcInfo.IsDir() && destIsDir {
-			e := strings.LastIndex(src, "/") + 1
-			dest += "/" + src[e:len(src)-len("md")] + "html"
+			filename := filepath.Base(src)
+			filename = filename[:len(filename)-len("md")] + "html"
+			dest = filepath.Join(dest, filename)
 		} else if srcInfo.IsDir() && !destIsDir {
 			ErrPrintf("Cannot write output from directory %s to file %s\n", src, dest)
 			os.Exit(1)
