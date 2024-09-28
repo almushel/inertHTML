@@ -1,11 +1,12 @@
 package parser
 
-import (
-	"strings"
-)
+type InertParserResult struct {
+	Title string
+	Body  string
+}
 
-func MDtoHTML(src, template string) (string, error) {
-	var result string
+func MDtoHTML(src string) (InertParserResult, error) {
+	var result InertParserResult
 
 	blocks := ParseMDBlocks(src)
 	blockNodes, err := BlocksToHTMLNodes(blocks)
@@ -13,29 +14,17 @@ func MDtoHTML(src, template string) (string, error) {
 		return result, err
 	}
 
-	var pageTitle string
-
 	for i := range blockNodes {
 		blockNodes[i].ProcessInnerText()
 		blockNodes[i].UnescapeMD()
 	}
 
-	var body string
 	for _, node := range blockNodes {
-		if pageTitle == "" && node.Tag == "h1" {
-			pageTitle = node.Value
+		if result.Title == "" && node.Tag == "h1" {
+			result.Title = node.Value
 		}
-		body += node.ToHTML()
+		result.Body += node.ToHTML()
 	}
-
-	result = strings.Join(
-		strings.Split(template, "{{ Title }}"),
-		pageTitle,
-	)
-	result = strings.Join(
-		strings.Split(result, "{{ Content }}"),
-		body,
-	)
 
 	return result, nil
 }

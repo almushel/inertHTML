@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-)
 
-type InertFlags struct {
-	Interactive, NoClobber, Recursive, Verbose, PagesAsDirs bool
-}
+	"github.com/almushel/inertHTML/generator"
+)
 
 func ErrPrintf(format string, a ...any) (int, error) {
 	return fmt.Fprintf(os.Stderr, "inertHTML: "+format, a...)
@@ -21,7 +19,7 @@ func ErrPrintln(format string) (int, error) {
 
 func main() {
 	var err error
-	var flags InertFlags
+	var flags generator.InertFlags
 	var src, template, dest string
 
 	flag.BoolVar(&flags.NoClobber, "n", false, "do not overwrite an existing file")
@@ -79,7 +77,7 @@ func main() {
 	}
 
 	if template != "" {
-		err = ValidateTemplateFile(template)
+		err = generator.ValidateTemplateFile(template)
 		if err != nil {
 			ErrPrintln(err.Error())
 			os.Exit(1)
@@ -87,9 +85,9 @@ func main() {
 	}
 
 	if srcInfo.IsDir() {
-		err = GenerateDirectory(src, template, dest, flags)
+		err = generator.GenerateDirectory(src, template, dest, flags)
 	} else {
-		err = GeneratePageEx(src, template, dest, flags)
+		err = generator.GeneratePageEx(src, template, dest, flags)
 	}
 
 	if err != nil {
