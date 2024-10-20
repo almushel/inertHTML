@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -58,11 +59,17 @@ func main() {
 			dest = src[:len(src)-len("md")] + "html"
 		}
 	} else {
-		dest = filepath.Clean(dest)
-		destExt := filepath.Ext(dest)
-		destIsDir := (destExt == "")
-		if !destIsDir && destExt != ".html" {
-			ErrPrintln("Invalid output. Directory or *.html file expected")
+		var destIsDir bool
+		dest := filepath.Clean(dest)
+
+		destInfo, err := os.Stat(dest)
+		if err == nil {
+			destIsDir = destInfo.IsDir()
+		} else if errors.Is(err, os.ErrNotExist) {
+			// Assume path for nonexistent dest is either directory or .html (the only valid filetype)
+			destIsDir = (filepath.Ext(dest) != ".html")
+		} else {
+			ErrPrintf(err.Error())
 			os.Exit(1)
 		}
 

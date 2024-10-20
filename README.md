@@ -20,7 +20,8 @@ inertHTML directory
 
 If the `-o` flag is defined, the results will be output there.
 Like the source, this can be a file or a directory.
-However, setting `-o` to a file when the source is a directory will return an error.
+If the given path does not exist, it is assumed to be a file only if the extension is `.html`.
+Setting `-o` to a file when the source is a directory will return an error.
 
 ```sh
 # Writes to file.html
